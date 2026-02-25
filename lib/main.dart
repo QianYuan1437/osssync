@@ -74,7 +74,7 @@ class _AppWithTrayState extends State<AppWithTray>
   }
 
   Future<void> _initTray() async {
-    await trayManager.setIcon('assets/icons/tray_icon.png');
+    await trayManager.setIcon('assets/icons/cloud.png');
     final menu = Menu(items: [
       MenuItem(key: 'show', label: '显示主窗口'),
       MenuItem.separator(),

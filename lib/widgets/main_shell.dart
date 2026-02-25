@@ -6,6 +6,7 @@ import '../screens/home_screen.dart';
 import '../screens/accounts_screen.dart';
 import '../screens/sync_tasks_screen.dart';
 import '../screens/logs_screen.dart';
+import '../screens/file_preview_screen.dart';
 
 /// 主框架：左侧导航 + 右侧 IndexedStack 页面区域
 /// 完全使用原生 Navigator，不依赖 go_router
@@ -41,6 +42,7 @@ class _MainShellState extends State<MainShell> {
                 AccountsScreen(),
                 SyncTasksScreen(),
                 LogsScreen(),
+                FilePreviewScreen(),
               ],
             ),
           ),
@@ -178,6 +180,13 @@ class _SideNav extends StatelessWidget {
             label: '同步日志',
             isActive: currentIndex == 3,
             onTap: () => onTap(3),
+          ),
+          _NavItem(
+            icon: Icons.folder_open_outlined,
+            activeIcon: Icons.folder_open,
+            label: '文件预览',
+            isActive: currentIndex == 4,
+            onTap: () => onTap(4),
           ),
           const Spacer(),
           const Divider(height: 1),
