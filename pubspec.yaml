@@ -1,0 +1,46 @@
+name: osssync
+description: "阿里云 OSS 存储桶自动同步工具"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  # 状态管理
+  provider: ^6.1.2
+  # 本地持久化
+  shared_preferences: ^2.3.3
+  flutter_secure_storage: ^9.2.2
+  # 网络请求
+  dio: ^5.7.0
+  # 文件选择
+  file_picker: ^8.1.4
+  # 加密/签名
+  crypto: ^3.0.6
+  convert: ^3.1.2
+  # 工具
+  intl: ^0.19.0
+  path: ^1.9.0
+  path_provider: ^2.1.5
+  uuid: ^4.5.1
+  xml: ^6.5.0
+  # 系统托盘
+  tray_manager: ^0.2.3
+  # 窗口管理
+  window_manager: ^0.4.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icons/
