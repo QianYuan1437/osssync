@@ -453,7 +453,7 @@ class _BucketConfigCardState extends State<_BucketConfigCard> {
             const SizedBox(height: 12),
             // Region 选择
             DropdownButtonFormField<String>(
-              value: d.selectedRegion,
+              initialValue: d.selectedRegion,
               decoration: const InputDecoration(
                 labelText: '地域 (Region)',
                 prefixIcon: Icon(Icons.location_on_outlined),

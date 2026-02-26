@@ -1,5 +1,6 @@
 {
     "protobuf.externalLinter.enabled": true,
     "protobuf.externalLinter.linter": "buf",
-    "protobuf.externalLinter.bufPath": "c:\\Users\\qiany\\AppData\\Roaming\\Code\\User\\globalStorage\\drblury.protobuf-vsc\\bin\\buf.exe"
+    "protobuf.externalLinter.bufPath": "c:\\Users\\qiany\\AppData\\Roaming\\Code\\User\\globalStorage\\drblury.protobuf-vsc\\bin\\buf.exe",
+    "cmake.ignoreCMakeListsMissing": true
 }

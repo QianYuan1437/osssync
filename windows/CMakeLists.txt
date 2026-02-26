@@ -2,6 +2,11 @@
 cmake_minimum_required(VERSION 3.14)
 project(osssync LANGUAGES CXX)
 
+# 强制开启 MSVC 编译器的多核/多线程编译
+if(MSVC)
+  add_compile_options(/MP)
+endif()
+
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
 set(BINARY_NAME "osssync")

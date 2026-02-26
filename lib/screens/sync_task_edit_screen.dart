@@ -268,7 +268,7 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                       children: [
                         // 账户选择
                         DropdownButtonFormField<String>(
-                          value: _selectedAccountId,
+                          initialValue: _selectedAccountId,
                           decoration: const InputDecoration(
                             labelText: '选择账户',
                             prefixIcon: Icon(Icons.person_outline),
@@ -289,7 +289,7 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                         const SizedBox(height: 12),
                         // 存储桶选择
                         DropdownButtonFormField<String>(
-                          value: _selectedBucketConfigId,
+                          initialValue: _selectedBucketConfigId,
                           decoration: const InputDecoration(
                             labelText: '选择存储桶',
                             prefixIcon: Icon(Icons.storage_outlined),
@@ -408,7 +408,7 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                         const Divider(height: 24),
                         // 同步间隔
                         DropdownButtonFormField<int>(
-                          value: _intervalMinutes,
+                          initialValue: _intervalMinutes,
                           decoration: const InputDecoration(
                             labelText: '自动同步间隔',
                             prefixIcon: Icon(Icons.schedule),
