@@ -4,12 +4,18 @@ import 'package:provider/provider.dart';
 import '../models/sync_task.dart';
 import '../providers/account_provider.dart';
 import '../providers/sync_provider.dart';
+import '../services/storage_service.dart';
 import '../utils/app_navigator.dart';
 import '../widgets/common_widgets.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final syncProvider = context.watch<SyncProvider>();
@@ -87,10 +93,7 @@ class HomeScreen extends StatelessWidget {
                         ?.copyWith(fontWeight: FontWeight.bold)),
                 const Spacer(),
                 TextButton.icon(
-                  onPressed: () {
-                    // 切换到同步任务标签（通过 MainShell 的状态）
-                    // 使用 Navigator 弹出到根页面后切换
-                  },
+                  onPressed: () {},
                   icon: const Icon(Icons.arrow_forward, size: 14),
                   label: const Text('管理任务'),
                 ),
@@ -108,13 +111,14 @@ class HomeScreen extends StatelessWidget {
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
                     itemCount: tasks.length,
                     itemBuilder: (context, index) {
                       final task = tasks[index];
-                      final account = accountProvider.getAccountById(task.accountId);
-                      final bucket =
-                          accountProvider.getBucketConfigById(task.bucketConfigId);
+                      final account =
+                          accountProvider.getAccountById(task.accountId);
+                      final bucket = accountProvider
+                          .getBucketConfigById(task.bucketConfigId);
                       return _TaskStatusCard(
                         task: task,
                         accountName: account?.name ?? '未知账户',
@@ -126,7 +130,272 @@ class HomeScreen extends StatelessWidget {
                     },
                   ),
           ),
+          // 应用设置区域
+          const Divider(height: 1),
+          _AppSettingsSection(),
         ],
+      ),
+    );
+  }
+}
+
+/// 控制台底部应用设置区域
+class _AppSettingsSection extends StatefulWidget {
+  const _AppSettingsSection();
+
+  @override
+  State<_AppSettingsSection> createState() => _AppSettingsSectionState();
+}
+
+class _AppSettingsSectionState extends State<_AppSettingsSection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      alignment: Alignment.topCenter,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 折叠标题行
+          InkWell(
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              child: Row(
+                children: [
+                  Icon(Icons.settings_outlined,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 8),
+                  Text(
+                    '应用设置',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    _expanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    size: 18,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_expanded) ...[
+            const Divider(height: 1),
+            _CloseActionSetting(),
+            const SizedBox(height: 8),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// 关闭行为设置项
+class _CloseActionSetting extends StatefulWidget {
+  const _CloseActionSetting();
+
+  @override
+  State<_CloseActionSetting> createState() => _CloseActionSettingState();
+}
+
+class _CloseActionSettingState extends State<_CloseActionSetting> {
+  late String _closeAction;
+  late bool _isSet;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  void _loadSettings() {
+    final storage = context.read<StorageService>();
+    _closeAction = storage.getCloseAction();
+    _isSet = storage.isCloseActionSet();
+  }
+
+  Future<void> _onActionChanged(String? value) async {
+    if (value == null) return;
+    final storage = context.read<StorageService>();
+    await storage.saveCloseAction(value);
+    await storage.setCloseActionConfirmed();
+    setState(() {
+      _closeAction = value;
+      _isSet = true;
+    });
+  }
+
+  Future<void> _onResetSetting() async {
+    final storage = context.read<StorageService>();
+    await storage.resetCloseActionSetting();
+    setState(() => _isSet = false);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('已重置，下次关闭时将重新询问'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.close,
+                  size: 16, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 8),
+              Text(
+                '关闭窗口行为',
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(width: 8),
+              if (!_isSet)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.tertiaryContainer,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    '未设置',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onTertiaryContainer,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _SettingRadioChip(
+                label: '最小化到系统托盘',
+                icon: Icons.minimize,
+                value: 'minimize',
+                groupValue: _closeAction,
+                onChanged: _onActionChanged,
+              ),
+              const SizedBox(width: 10),
+              _SettingRadioChip(
+                label: '退出程序',
+                icon: Icons.exit_to_app,
+                value: 'exit',
+                groupValue: _closeAction,
+                onChanged: _onActionChanged,
+              ),
+              const Spacer(),
+              if (_isSet)
+                TextButton.icon(
+                  onPressed: _onResetSetting,
+                  icon: const Icon(Icons.refresh, size: 14),
+                  label: const Text('重置（下次询问）'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.onSurfaceVariant,
+                    textStyle: theme.textTheme.bodySmall,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _isSet
+                ? '当前设置：点击关闭按钮将${_closeAction == 'minimize' ? '最小化到系统托盘' : '退出程序'}'
+                : '尚未设置，下次点击关闭按钮时将弹出选择对话框',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 单选样式的 Chip 按钮
+class _SettingRadioChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final String value;
+  final String groupValue;
+  final ValueChanged<String?> onChanged;
+
+  const _SettingRadioChip({
+    required this.label,
+    required this.icon,
+    required this.value,
+    required this.groupValue,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isSelected = value == groupValue;
+    return InkWell(
+      onTap: () => onChanged(value),
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.colorScheme.primary.withValues(alpha: 0.12)
+              : theme.colorScheme.surfaceContainerHighest,
+          border: Border.all(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outlineVariant,
+            width: isSelected ? 1.5 : 1,
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 14,
+              color: isSelected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isSelected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
+                fontWeight:
+                    isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -12,6 +12,8 @@ class StorageService {
   static const _tasksKey = 'sync_tasks';
   static const _logsKey = 'sync_logs';
   static const _themeModeKey = 'theme_mode';
+  static const _closeActionKey = 'close_action';
+  static const _closeActionSetKey = 'close_action_set';
   static const _maxLogs = 500;
 
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
@@ -37,6 +39,30 @@ class StorageService {
 
   Future<void> saveThemeMode(String mode) async {
     await prefs.setString(_themeModeKey, mode);
+  }
+
+  // ─── 关闭行为 ────────────────────────────────────────────────────────────────
+
+  /// 获取关闭行为：'minimize'=最小化到托盘，'exit'=退出程序
+  String getCloseAction() {
+    return prefs.getString(_closeActionKey) ?? 'minimize';
+  }
+
+  Future<void> saveCloseAction(String action) async {
+    await prefs.setString(_closeActionKey, action);
+  }
+
+  /// 是否已经设置过关闭行为（用于判断是否首次关闭）
+  bool isCloseActionSet() {
+    return prefs.getBool(_closeActionSetKey) ?? false;
+  }
+
+  Future<void> setCloseActionConfirmed() async {
+    await prefs.setBool(_closeActionSetKey, true);
+  }
+
+  Future<void> resetCloseActionSetting() async {
+    await prefs.remove(_closeActionSetKey);
   }
 
   // ─── 账户 ───────────────────────────────────────────────────────────────────
