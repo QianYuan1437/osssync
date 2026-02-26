@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OSS Sync - 阿里云 OSS 自动同步工具</title>
+  <meta name="description" content="基于 Flutter 构建的 Windows 桌面应用，轻松实现本地文件夹与阿里云 OSS 存储桶的自动定时同步。" />
+  <link rel="icon" href="https://raw.githubusercontent.com/QianYuan1437/osssync/main/assets/icons/cloud.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #1677ff;
+      --primary-light: #e6f0ff;
+      --primary-dark: #0958d9;
+      --text: #1a1a2e;
+      --text-secondary: #555577;
+      --bg: #f8faff;
+      --card-bg: #ffffff;
+      --border: #e0e8ff;
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(22,119,255,0.08);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(248,250,255,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 5%;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 1.1rem; color: var(--primary);
+      text-decoration: none;
+    }
+    .nav-brand img { width: 28px; height: 28px; border-radius: 6px; }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a {
+      color: var(--text-secondary); text-decoration: none;
+      font-size: 0.9rem; transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--primary); }
+    .nav-cta {
+      background: var(--primary); color: #fff;
+      padding: 8px 20px; border-radius: 8px;
+      text-decoration: none; font-size: 0.9rem; font-weight: 600;
+      transition: background .2s, transform .15s;
+    }
+    .nav-cta:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 100px 5% 80px;
+      text-align: center;
+      background: linear-gradient(160deg, #f0f6ff 0%, #f8faff 60%);
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--primary-light); color: var(--primary);
+      padding: 5px 14px; border-radius: 20px;
+      font-size: 0.82rem; font-weight: 600; margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800; line-height: 1.2;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 1.15rem; color: var(--text-secondary);
+      max-width: 560px; margin: 0 auto 40px;
+    }
+    .hero-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--primary); color: #fff;
+      padding: 13px 28px; border-radius: 10px;
+      text-decoration: none; font-weight: 700; font-size: 1rem;
+      box-shadow: 0 4px 16px rgba(22,119,255,0.35);
+      transition: background .2s, transform .15s, box-shadow .2s;
+    }
+    .btn-primary:hover {
+      background: var(--primary-dark); transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(22,119,255,0.4);
+    }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #fff; color: var(--primary);
+      padding: 13px 28px; border-radius: 10px;
+      text-decoration: none; font-weight: 600; font-size: 1rem;
+      border: 1.5px solid var(--primary);
+      transition: background .2s, transform .15s;
+    }
+    .btn-secondary:hover { background: var(--primary-light); transform: translateY(-2px); }
+
+    /* ── Section ── */
+    section { padding: 80px 5%; }
+    .section-label {
+      text-align: center; font-size: 0.82rem; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--primary); margin-bottom: 12px;
+    }
+    .section-title {
+      text-align: center; font-size: clamp(1.5rem, 3vw, 2.2rem);
+      font-weight: 800; margin-bottom: 14px;
+    }
+    .section-desc {
+      text-align: center; color: var(--text-secondary);
+      max-width: 520px; margin: 0 auto 56px; font-size: 1rem;
+    }
+
+    /* ── Features Grid ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px; max-width: 1100px; margin: 0 auto;
+    }
+    .feature-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px 24px;
+      box-shadow: var(--shadow);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(22,119,255,0.12); }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: var(--primary-light);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; margin-bottom: 16px;
+    }
+    .feature-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; }
+
+    /* ── How it works ── */
+    .steps { display: flex; flex-direction: column; gap: 0; max-width: 700px; margin: 0 auto; }
+    .step {
+      display: flex; gap: 24px; align-items: flex-start;
+      padding: 28px 0; border-bottom: 1px dashed var(--border);
+    }
+    .step:last-child { border-bottom: none; }
+    .step-num {
+      flex-shrink: 0; width: 44px; height: 44px;
+      background: var(--primary); color: #fff;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.1rem;
+    }
+    .step-content h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+    .step-content p { font-size: 0.9rem; color: var(--text-secondary); }
+
+    /* ── Tech Stack ── */
+    .tech-bg { background: linear-gradient(160deg, #f0f6ff 0%, #f8faff 100%); }
+    .tech-grid {
+      display: flex; flex-wrap: wrap; gap: 14px;
+      justify-content: center; max-width: 800px; margin: 0 auto;
+    }
+    .tech-tag {
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 18px;
+      font-size: 0.88rem; font-weight: 600; color: var(--text);
+      box-shadow: 0 2px 8px rgba(22,119,255,0.06);
+    }
+    .tech-tag span { color: var(--primary); margin-right: 6px; }
+
+    /* ── Download ── */
+    .download-box {
+      max-width: 640px; margin: 0 auto;
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 20px; padding: 48px 40px; text-align: center;
+      box-shadow: 0 8px 40px rgba(22,119,255,0.1);
+    }
+    .download-box .icon { font-size: 3rem; margin-bottom: 16px; }
+    .download-box h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 10px; }
+    .download-box p { color: var(--text-secondary); margin-bottom: 28px; }
+    .download-meta {
+      display: flex; gap: 20px; justify-content: center;
+      font-size: 0.82rem; color: var(--text-secondary); margin-top: 18px;
+    }
+    .download-meta span { display: flex; align-items: center; gap: 4px; }
+
+    /* ── Footer ── */
+    footer {
+      background: #fff; border-top: 1px solid var(--border);
+      padding: 32px 5%; text-align: center;
+      color: var(--text-secondary); font-size: 0.85rem;
+    }
+    footer a { color: var(--primary); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .hero { padding: 70px 5% 60px; }
+      .download-box { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <a class="nav-brand" href="#">
+    <img src="https://raw.githubusercontent.com/QianYuan1437/osssync/main/assets/icons/cloud.png" alt="OSS Sync" />
+    OSS Sync
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">功能特性</a></li>
+    <li><a href="#howto">使用步骤</a></li>
+    <li><a href="#tech">技术栈</a></li>
+    <li><a href="#download">下载</a></li>
+  </ul>
+  <a class="nav-cta" href="https://github.com/QianYuan1437/osssync/releases/latest" target="_blank">⬇ 立即下载</a>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">
+    <span>🚀</span> Windows 桌面应用 · Flutter 构建
+  </div>
+  <h1>阿里云 OSS<br/>自动同步工具</h1>
+  <p>将本地文件夹与阿里云 OSS 存储桶无缝同步，支持定时自动同步、增量传输、多账户管理，后台静默运行。</p>
+  <div class="hero-actions">
+    <a class="btn-primary" href="https://github.com/QianYuan1437/osssync/releases/latest" target="_blank">
+      ⬇ 下载安装包
+    </a>
+    <a class="btn-secondary" href="https://github.com/QianYuan1437/osssync" target="_blank">
+      ⭐ 查看源码
+    </a>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features">
+  <p class="section-label">功能特性</p>
+  <h2 class="section-title">一切你需要的同步功能</h2>
+  <p class="section-desc">专为 Windows 用户设计，简洁直观的界面，强大可靠的同步引擎。</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">☁️</div>
+      <h3>多账户管理</h3>
+      <p>支持配置多个阿里云账户，AccessKey Secret 使用 Windows Credential Manager 加密存储，安全可靠。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔄</div>
+      <h3>三向同步模式</h3>
+      <p>支持「上传（本地→OSS）」「下载（OSS→本地）」「双向同步」三种模式，灵活适配不同场景。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⏱️</div>
+      <h3>定时自动同步</h3>
+      <p>可设置 5 分钟到每天的自动同步间隔，程序最小化到托盘后持续在后台运行，无需手动干预。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3>增量同步</h3>
+      <p>基于 ETag/MD5 对比，只传输发生变更的文件，大幅节省带宽和时间，避免重复上传。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🗂️</div>
+      <h3>文件预览</h3>
+      <p>内置文件浏览器，可直接查看各同步任务本地文件夹内容，一键调用系统资源管理器打开。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <h3>同步日志</h3>
+      <p>完整记录每次同步的文件数量、耗时和错误信息，支持按级别和任务筛选，问题排查一目了然。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌙</div>
+      <h3>深色/浅色主题</h3>
+      <p>支持深色和浅色主题切换，偏好设置持久化保存，保护你的眼睛。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔔</div>
+      <h3>系统托盘</h3>
+      <p>关闭窗口后最小化到系统托盘，右键菜单可快速触发全部同步或退出程序，不打扰工作流。</p>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section id="howto" class="tech-bg">
+  <p class="section-label">使用步骤</p>
+  <h2 class="section-title">三步开始同步</h2>
+  <p class="section-desc">从安装到第一次同步，只需几分钟。</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>添加阿里云账户</h3>
+        <p>进入「账户管理」→「新增账户」，填写 AccessKey ID / Secret 和存储桶信息，点击「测试连接」验证配置。</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>创建同步任务</h3>
+        <p>进入「同步任务」→「新建任务」，选择账户和存储桶，指定本地文件夹、OSS 路径前缀、同步方向和自动同步间隔。</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>开始同步</h3>
+        <p>启用任务后自动按设定间隔同步；也可在控制台手动触发，或右键托盘图标选择「立即同步全部」。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Tech Stack -->
+<section id="tech">
+  <p class="section-label">技术栈</p>
+  <h2 class="section-title">基于现代技术构建</h2>
+  <p class="section-desc">使用 Flutter 跨平台框架，专为 Windows 桌面优化。</p>
+  <div class="tech-grid">
+    <div class="tech-tag"><span>🎯</span>Flutter 3</div>
+    <div class="tech-tag"><span>🪟</span>window_manager</div>
+    <div class="tech-tag"><span>🔔</span>tray_manager</div>
+    <div class="tech-tag"><span>🔐</span>flutter_secure_storage</div>
+    <div class="tech-tag"><span>📦</span>provider</div>
+    <div class="tech-tag"><span>💾</span>shared_preferences</div>
+    <div class="tech-tag"><span>🌐</span>http</div>
+    <div class="tech-tag"><span>🔑</span>crypto (HMAC-SHA1)</div>
+    <div class="tech-tag"><span>📁</span>file_picker</div>
+    <div class="tech-tag"><span>☁️</span>阿里云 OSS REST API</div>
+  </div>
+</section>
+
+<!-- Download -->
+<section id="download">
+  <div class="download-box">
+    <div class="icon">⬇️</div>
+    <h2>立即下载</h2>
+    <p>支持 Windows 10 / 11（64位），安装包约 11 MB，开箱即用。</p>
+    <a class="btn-primary" href="https://github.com/QianYuan1437/osssync/releases/latest" target="_blank">
+      下载 OSSSync_Setup_v1.0.0.exe
+    </a>
+    <div class="download-meta">
+      <span>🪟 Windows 10/11 x64</span>
+      <span>📦 ~11 MB</span>
+      <span>🆓 免费开源</span>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>
+    © 2026 <a href="https://github.com/QianYuan1437" target="_blank">QianYuan1437</a> ·
+    基于 <a href="https://flutter.dev" target="_blank">Flutter</a> 构建 ·
+    <a href="https://github.com/QianYuan1437/osssync" target="_blank">GitHub 仓库</a> ·
+    <a href="https://github.com/QianYuan1437/osssync/releases" target="_blank">版本发布</a>
+  </p>
+</footer>
+
+</body>
+</html>
