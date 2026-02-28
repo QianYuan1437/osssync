@@ -19,7 +19,7 @@
     }
     h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; color: #1677ff; }
     p { color: #555577; margin-bottom: 32px; }
-    .links { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; }
+    .links { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 360px; }
     a.card {
       display: flex; align-items: center; gap: 14px;
       background: #fff; border: 1px solid #e0e8ff;
@@ -29,7 +29,7 @@
       transition: transform .15s, box-shadow .15s;
     }
     a.card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(22,119,255,0.13); }
-    a.card .icon { font-size: 1.6rem; }
+    a.card .icon { font-size: 1.6rem; flex-shrink: 0; }
     a.card .info .name { font-weight: 700; font-size: 0.95rem; }
     a.card .info .desc { font-size: 0.82rem; color: #555577; margin-top: 2px; }
   </style>
@@ -43,6 +43,20 @@
       <div class="info">
         <div class="name">OSS Sync</div>
         <div class="desc">阿里云 OSS 自动同步工具（Windows）</div>
+      </div>
+    </a>
+    <a class="card" href="/news/">
+      <span class="icon">🐾</span>
+      <div class="info">
+        <div class="name">OpenClaw</div>
+        <div class="desc">OpenClaw 项目主页</div>
+      </div>
+    </a>
+    <a class="card" href="/TechNews/">
+      <span class="icon">📰</span>
+      <div class="info">
+        <div class="name">TechNews</div>
+        <div class="desc">科技资讯聚合</div>
       </div>
     </a>
   </div>
