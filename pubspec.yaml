@@ -43,11 +43,11 @@ dev_dependencies:
 
 msix_config:
   display_name: OSS Sync
-  publisher_display_name: QianYuan1437
-  identity_name: QianYuan1437.OSSSync
+  publisher_display_name: Ronald Joe
+  identity_name: RonaldJoe.OSSSync
   msix_version: 1.0.1.0
   description: 阿里云 OSS 存储桶自动同步工具
-  publisher: CN=QianYuan1437
+  publisher: CN=Ronald Joe
   logo_path: assets\icons\cloud.png
   capabilities: internetClient
   languages: zh-cn, en-us

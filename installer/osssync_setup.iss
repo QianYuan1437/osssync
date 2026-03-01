@@ -4,7 +4,7 @@
 
 #define AppName "OSS Sync"
 #define AppVersion "1.0.1"
-#define AppPublisher "QianYuan1437"
+#define AppPublisher "Ronald Joe"
 #define AppURL "https://github.com/QianYuan1437/osssync"
 #define AppExeName "osssync.exe"
 ; Flutter release 构建输出目录（相对于本脚本所在目录的上级）
