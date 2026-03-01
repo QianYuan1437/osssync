@@ -39,6 +39,20 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  msix: ^3.16.8
+
+msix_config:
+  display_name: OSS Sync
+  publisher_display_name: QianYuan1437
+  identity_name: QianYuan1437.OSSSync
+  msix_version: 1.0.1.0
+  description: 阿里云 OSS 存储桶自动同步工具
+  publisher: CN=QianYuan1437
+  logo_path: assets\icons\cloud.png
+  capabilities: internetClient
+  languages: zh-cn, en-us
+  store: false
+  sign_msix: false
 
 flutter:
   uses-material-design: true
