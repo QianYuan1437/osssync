@@ -47,7 +47,7 @@ msix_config:
   identity_name: RonaldJoe.OSSSync
   msix_version: 1.0.1.0
   description: 阿里云 OSS 存储桶自动同步工具
-  publisher: CN=Ronald Joe
+  publisher: CN=1500B7E3-1F95-4537-B85D-F9DAF2F0EC12
   logo_path: assets\icons\cloud.png
   capabilities: internetClient
   languages: zh-cn, en-us
