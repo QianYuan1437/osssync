@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
@@ -28,6 +29,12 @@ class SyncResult {
 
 class SyncEngine {
   final _uuid = const Uuid();
+  bool _isCancelled = false;
+
+  /// 取消正在进行的同步任务
+  void cancel() {
+    _isCancelled = true;
+  }
 
   /// 执行同步任务，返回同步日志
   Future<SyncLog> runSync({
@@ -36,6 +43,7 @@ class SyncEngine {
     required BucketConfig bucket,
     void Function(String message)? onProgress,
   }) async {
+    _isCancelled = false; // 重置取消标志
     final startTime = DateTime.now();
     int uploaded = 0, downloaded = 0, skipped = 0, deleted = 0;
     final errors = <String>[];
@@ -44,9 +52,13 @@ class SyncEngine {
     final remotePrefixNorm = _normalizeRemotePath(task.remotePath);
 
     try {
+      if (_isCancelled) throw Exception('同步已取消');
+      
       onProgress?.call('正在获取本地文件列表...');
       final localFiles = await _scanLocalFiles(task.localPath);
 
+      if (_isCancelled) throw Exception('同步已取消');
+      
       onProgress?.call('正在获取 OSS 文件列表...');
       final ossObjects = await oss.listObjects(remotePrefixNorm);
       final ossMap = <String, OssObject>{};
@@ -235,11 +247,17 @@ class SyncEngine {
     if (!await dir.exists()) return result;
 
     await for (final entity in dir.list(recursive: true, followLinks: false)) {
+      if (_isCancelled) break;
+      
       if (entity is File) {
-        final relPath = p.relative(entity.path, from: basePath);
-        final bytes = await entity.readAsBytes();
-        final digest = md5.convert(bytes);
-        result[relPath] = digest.toString();
+        try {
+          final relPath = p.relative(entity.path, from: basePath);
+          final digest = await md5.bind(entity.openRead()).first;
+          result[relPath] = digest.toString();
+        } catch (e) {
+          // 跳过无法读取的文件（权限问题等）
+          continue;
+        }
       }
     }
     return result;

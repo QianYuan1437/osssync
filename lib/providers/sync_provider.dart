@@ -228,6 +228,7 @@ class SyncProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _engine.cancel(); // 取消正在进行的同步任务
     _scheduler.dispose();
     super.dispose();
   }
