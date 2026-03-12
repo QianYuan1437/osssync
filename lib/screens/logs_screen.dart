@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/sync_log.dart';
@@ -238,6 +239,15 @@ class _LogCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
+                // 复制按钮
+                IconButton(
+                  icon: const Icon(Icons.copy, size: 16),
+                  tooltip: '复制日志',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => _copyLog(context),
+                ),
+                const SizedBox(width: 8),
                 // 时间
                 Text(
                   DateFormat('MM-dd HH:mm:ss').format(log.timestamp.toLocal()),
@@ -291,6 +301,24 @@ class _LogCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _copyLog(BuildContext context) {
+    final buffer = StringBuffer();
+    buffer.writeln('【${log.level.label}】${log.taskName}');
+    buffer.writeln('时间: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(log.timestamp.toLocal())}');
+    if (log.duration != null) {
+      buffer.writeln('耗时: ${_formatDuration(log.duration!)}');
+    }
+    buffer.writeln('消息: ${log.message}');
+    if (log.filesUploaded > 0 || log.filesDownloaded > 0 || log.filesSkipped > 0) {
+      buffer.writeln('统计: 上传${log.filesUploaded} 下载${log.filesDownloaded} 跳过${log.filesSkipped}');
+    }
+    
+    Clipboard.setData(ClipboardData(text: buffer.toString()));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('日志已复制到剪贴板'), duration: Duration(seconds: 2)),
     );
   }
 

@@ -117,6 +117,15 @@ class OssService {
     return objects;
   }
 
+  String _decodeXmlEntities(String text) {
+    return text
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&apos;', "'");
+  }
+
   Map<String, dynamic> _parseListObjectsXml(String xmlStr) {
     final objects = <OssObject>[];
     bool isTruncated = false;
@@ -133,7 +142,7 @@ class OssService {
     final markerMatch =
         RegExp(r'<NextMarker>(.*?)</NextMarker>').firstMatch(xmlStr);
     if (markerMatch != null) {
-      nextMarker = markerMatch.group(1);
+      nextMarker = _decodeXmlEntities(markerMatch.group(1)!);
     }
 
     // 解析 Contents
@@ -142,7 +151,8 @@ class OssService {
         dotAll: true);
     for (final match in contentRegex.allMatches(xmlStr)) {
       final content = match.group(1)!;
-      final key = RegExp(r'<Key>(.*?)</Key>').firstMatch(content)?.group(1) ?? '';
+      final rawKey = RegExp(r'<Key>(.*?)</Key>').firstMatch(content)?.group(1) ?? '';
+      final key = _decodeXmlEntities(rawKey);
       final etag = (RegExp(r'<ETag>(.*?)</ETag>').firstMatch(content)?.group(1) ?? '')
           .replaceAll('"', '')
           .toLowerCase();
@@ -229,8 +239,11 @@ class OssService {
       await dir.create(recursive: true);
     }
 
+    // URL编码objectKey,但签名已经用原始key计算
+    final encodedKey = Uri.encodeComponent(objectKey).replaceAll('%2F', '/');
+
     await _dio.download(
-      '$_baseUrl/$objectKey',
+      '$_baseUrl/$encodedKey',
       localFilePath,
       options: Options(headers: headers),
       onReceiveProgress: onProgress,
