@@ -194,8 +194,11 @@ class OssService {
       contentMd5: md5,
     );
 
+    // URL编码objectKey,但签名已经用原始key计算
+    final encodedKey = Uri.encodeComponent(objectKey).replaceAll('%2F', '/');
+
     await _dio.put(
-      '$_baseUrl/$objectKey',
+      '$_baseUrl/$encodedKey',
       data: Stream.fromIterable([bytes]),
       options: Options(
         headers: {
@@ -241,8 +244,10 @@ class OssService {
       method: 'DELETE',
       objectKey: objectKey,
     );
+    // URL编码objectKey,但签名已经用原始key计算
+    final encodedKey = Uri.encodeComponent(objectKey).replaceAll('%2F', '/');
     await _dio.delete(
-      '$_baseUrl/$objectKey',
+      '$_baseUrl/$encodedKey',
       options: Options(headers: headers),
     );
   }
