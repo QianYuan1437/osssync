@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/sync_provider.dart';
+import '../providers/locale_provider.dart';
 import '../models/sync_task.dart';
 
 /// 文件预览页面：展示各同步任务本地文件夹内容，支持打开文件资源管理器
@@ -130,7 +131,7 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
               Icon(Icons.folder_open, color: theme.colorScheme.primary, size: 20),
               const SizedBox(width: 10),
               Text(
-                '文件预览',
+                context.watch<LocaleProvider>().t('文件预览', 'File Preview'),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -140,7 +141,7 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
                 TextButton.icon(
                   onPressed: () => _openInExplorer(_currentPath!),
                   icon: const Icon(Icons.open_in_new, size: 16),
-                  label: const Text('在资源管理器中打开'),
+                  label: Text(context.watch<LocaleProvider>().t('在资源管理器中打开', 'Open in Explorer')),
                 ),
             ],
           ),
@@ -195,9 +196,9 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
           Icon(Icons.folder_off_outlined,
               size: 64, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
           const SizedBox(height: 16),
-          Text('暂无同步任务', style: theme.textTheme.bodyLarge),
+          Text(context.read<LocaleProvider>().t('暂无同步任务', 'No sync tasks'), style: theme.textTheme.bodyLarge),
           const SizedBox(height: 8),
-          Text('请先在「同步任务」页面创建任务',
+          Text(context.read<LocaleProvider>().t('请先在「同步任务」页面创建任务', 'Please create a task in Sync Tasks page'),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               )),
@@ -224,7 +225,7 @@ class _FilePreviewScreenState extends State<FilePreviewScreen> {
     if (_entries.isEmpty) {
       return Center(
         child: Text(
-          '此文件夹为空',
+          context.read<LocaleProvider>().t('此文件夹为空', 'This folder is empty'),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -282,7 +283,7 @@ class _TaskList extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Text(
-              '同步任务',
+              context.read<LocaleProvider>().t('同步任务', 'Sync Tasks'),
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 letterSpacing: 0.8,
@@ -384,7 +385,7 @@ class _BreadcrumbBar extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.arrow_upward, size: 16),
             onPressed: canGoUp ? onGoUp : null,
-            tooltip: '返回上级',
+            tooltip: context.read<LocaleProvider>().t('返回上级', 'Go up'),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
           ),
@@ -462,7 +463,7 @@ class _FileListTile extends StatelessWidget {
           : null,
       trailing: IconButton(
         icon: const Icon(Icons.open_in_new, size: 16),
-        tooltip: '在资源管理器中打开',
+        tooltip: context.read<LocaleProvider>().t('在资源管理器中打开', 'Open in Explorer'),
         onPressed: onOpenExplorer,
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints(minWidth: 28, minHeight: 28),

@@ -3,16 +3,16 @@ import 'dart:convert';
 enum LogLevel { info, warning, error, success }
 
 extension LogLevelLabel on LogLevel {
-  String get label {
+  String label(bool isZh) {
     switch (this) {
       case LogLevel.info:
-        return '信息';
+        return isZh ? '信息' : 'Info';
       case LogLevel.warning:
-        return '警告';
+        return isZh ? '警告' : 'Warning';
       case LogLevel.error:
-        return '错误';
+        return isZh ? '错误' : 'Error';
       case LogLevel.success:
-        return '成功';
+        return isZh ? '成功' : 'Success';
     }
   }
 }

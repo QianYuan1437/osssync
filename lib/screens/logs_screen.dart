@@ -70,7 +70,7 @@ class _LogsScreenState extends State<LogsScreen> {
                   ...LogLevel.values.map((level) => Padding(
                         padding: const EdgeInsets.only(right: 6),
                         child: _FilterChip(
-                          label: level.label,
+                          label: level.label(context.read<LocaleProvider>().isZh),
                           isSelected: _filterLevel == level,
                           color: _levelColor(level),
                           onTap: () => setState(() => _filterLevel =
@@ -239,7 +239,7 @@ class _LogCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    log.level.label,
+                    log.level.label(context.read<LocaleProvider>().isZh),
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: levelColor,
                       fontWeight: FontWeight.w600,
@@ -323,7 +323,7 @@ class _LogCard extends StatelessWidget {
   void _copyLog(BuildContext context) {
     final locale = context.read<LocaleProvider>();
     final buffer = StringBuffer();
-    buffer.writeln('【${log.level.label}】${log.taskName}');
+    buffer.writeln('【${log.level.label(locale.isZh)}】${log.taskName}');
     buffer.writeln('${locale.t('时间', 'Time')}: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(log.timestamp.toLocal())}');
     if (log.duration != null) {
       buffer.writeln('${locale.t('耗时', 'Duration')}: ${_formatDuration(log.duration!)}');

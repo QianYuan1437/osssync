@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/account_model.dart';
 import '../models/bucket_config.dart';
 import '../providers/account_provider.dart';
+import '../providers/locale_provider.dart';
 import '../services/oss_service.dart';
 import '../widgets/common_widgets.dart';
 
@@ -139,7 +140,7 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('保存失败: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('${context.read<LocaleProvider>().t('保存失败', 'Save failed')}: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -151,13 +152,13 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
     final b = _buckets[bucketIndex];
     if (_akIdCtrl.text.isEmpty || _akSecretCtrl.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请先填写 AccessKey 信息')),
+        SnackBar(content: Text(context.read<LocaleProvider>().t('请先填写 AccessKey 信息', 'Please fill in AccessKey info first'))),
       );
       return;
     }
     if (!b.isValid) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请先填写完整的存储桶信息')),
+        SnackBar(content: Text(context.read<LocaleProvider>().t('请先填写完整的存储桶信息', 'Please fill in complete bucket info'))),
       );
       return;
     }
@@ -185,7 +186,7 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(ok ? '连接成功！' : '连接失败，请检查配置'),
+            content: Text(ok ? context.read<LocaleProvider>().t('连接成功！', 'Connection successful!') : context.read<LocaleProvider>().t('连接失败，请检查配置', 'Connection failed, check config')),
             backgroundColor: ok ? Colors.green : Colors.red,
           ),
         );
@@ -194,7 +195,7 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('连接测试失败: $e'), backgroundColor: Colors.red),
+              content: Text('${context.read<LocaleProvider>().t('连接测试失败', 'Connection test failed')}: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -213,12 +214,12 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           PageHeader(
-            title: isEdit ? '编辑账户' : '新增账户',
+            title: context.read<LocaleProvider>().t(isEdit ? '编辑账户' : '新增账户', isEdit ? 'Edit Account' : 'New Account'),
             actions: [
               TextButton(
                 onPressed: () =>
                     Navigator.of(context, rootNavigator: true).pop(),
-                child: const Text('取消'),
+                child: Text(context.read<LocaleProvider>().t('取消', 'Cancel')),
               ),
               const SizedBox(width: 8),
               FilledButton(
@@ -229,7 +230,7 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('保存'),
+                    : Text(context.read<LocaleProvider>().t('保存', 'Save')),
               ),
             ],
           ),
@@ -242,7 +243,7 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 账户基本信息
-                    _SectionTitle(title: '账户信息'),
+                    _SectionTitle(title: context.read<LocaleProvider>().t('账户信息', 'Account Info')),
                     Card(
                       child: Padding(
                         padding: const EdgeInsets.all(16),
@@ -250,25 +251,25 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                           children: [
                             TextFormField(
                               controller: _nameCtrl,
-                              decoration: const InputDecoration(
-                                labelText: '账户名称',
-                                hintText: '如：我的阿里云账户',
-                                prefixIcon: Icon(Icons.label_outline),
+                              decoration: InputDecoration(
+                                labelText: context.read<LocaleProvider>().t('账户名称', 'Account Name'),
+                                hintText: context.read<LocaleProvider>().t('如：我的阿里云账户', 'e.g., My Aliyun Account'),
+                                prefixIcon: const Icon(Icons.label_outline),
                               ),
                               validator: (v) =>
-                                  v == null || v.trim().isEmpty ? '请输入账户名称' : null,
+                                  v == null || v.trim().isEmpty ? context.read<LocaleProvider>().t('请输入账户名称', 'Please enter account name') : null,
                             ),
                             const SizedBox(height: 12),
                             TextFormField(
                               controller: _akIdCtrl,
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: 'AccessKey ID',
-                                hintText: '阿里云 AccessKey ID',
-                                prefixIcon: Icon(Icons.key_outlined),
+                                hintText: context.read<LocaleProvider>().t('阿里云 AccessKey ID', 'Aliyun AccessKey ID'),
+                                prefixIcon: const Icon(Icons.key_outlined),
                               ),
                               validator: (v) =>
                                   v == null || v.trim().isEmpty
-                                      ? '请输入 AccessKey ID'
+                                      ? context.read<LocaleProvider>().t('请输入 AccessKey ID', 'Please enter AccessKey ID')
                                       : null,
                             ),
                             const SizedBox(height: 12),
@@ -277,7 +278,7 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                               obscureText: !_secretVisible,
                               decoration: InputDecoration(
                                 labelText: 'AccessKey Secret',
-                                hintText: '阿里云 AccessKey Secret',
+                                hintText: context.read<LocaleProvider>().t('阿里云 AccessKey Secret', 'Aliyun AccessKey Secret'),
                                 prefixIcon: const Icon(Icons.lock_outline),
                                 suffixIcon: IconButton(
                                   icon: Icon(_secretVisible
@@ -289,7 +290,7 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                               ),
                               validator: (v) =>
                                   v == null || v.trim().isEmpty
-                                      ? '请输入 AccessKey Secret'
+                                      ? context.read<LocaleProvider>().t('请输入 AccessKey Secret', 'Please enter AccessKey Secret')
                                       : null,
                             ),
                           ],
@@ -300,13 +301,13 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                     // 存储桶配置
                     Row(
                       children: [
-                        _SectionTitle(title: '存储桶配置'),
+                        _SectionTitle(title: context.read<LocaleProvider>().t('存储桶配置', 'Bucket Config')),
                         const Spacer(),
                         TextButton.icon(
                           onPressed: () =>
                               setState(() => _buckets.add(_BucketFormData())),
                           icon: const Icon(Icons.add, size: 16),
-                          label: const Text('添加存储桶'),
+                          label: Text(context.read<LocaleProvider>().t('添加存储桶', 'Add Bucket')),
                         ),
                       ],
                     ),
@@ -314,7 +315,7 @@ class _AccountEditScreenState extends State<AccountEditScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Text(
-                          '暂无存储桶配置，点击右上角添加',
+                          context.read<LocaleProvider>().t('暂无存储桶配置，点击右上角添加', 'No bucket config, click button to add'),
                           style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant),
                         ),
@@ -421,42 +422,42 @@ class _BucketConfigCardState extends State<_BucketConfigCard> {
           children: [
             Row(
               children: [
-                Text('存储桶 ${widget.index + 1}',
+                Text('${context.read<LocaleProvider>().t('存储桶', 'Bucket')} ${widget.index + 1}',
                     style: theme.textTheme.labelLarge),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, size: 18),
                   onPressed: widget.onRemove,
                   color: Colors.red,
-                  tooltip: '删除此存储桶',
+                  tooltip: context.read<LocaleProvider>().t('删除此存储桶', 'Delete this bucket'),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             TextFormField(
               controller: d.nameCtrl,
-              decoration: const InputDecoration(
-                labelText: '配置名称',
-                hintText: '如：生产环境图片桶',
-                prefixIcon: Icon(Icons.label_outline),
+              decoration: InputDecoration(
+                labelText: context.read<LocaleProvider>().t('配置名称', 'Config Name'),
+                hintText: context.read<LocaleProvider>().t('如：生产环境图片桶', 'e.g., Production Image Bucket'),
+                prefixIcon: const Icon(Icons.label_outline),
               ),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: d.bucketNameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Bucket 名称',
-                hintText: '如：my-bucket',
-                prefixIcon: Icon(Icons.storage_outlined),
+              decoration: InputDecoration(
+                labelText: context.read<LocaleProvider>().t('Bucket 名称', 'Bucket Name'),
+                hintText: context.read<LocaleProvider>().t('如：my-bucket', 'e.g., my-bucket'),
+                prefixIcon: const Icon(Icons.storage_outlined),
               ),
             ),
             const SizedBox(height: 12),
             // Region 选择
             DropdownButtonFormField<String>(
               initialValue: d.selectedRegion,
-              decoration: const InputDecoration(
-                labelText: '地域 (Region)',
-                prefixIcon: Icon(Icons.location_on_outlined),
+              decoration: InputDecoration(
+                labelText: context.read<LocaleProvider>().t('地域 (Region)', 'Region'),
+                prefixIcon: const Icon(Icons.location_on_outlined),
               ),
               items: kAliyunRegions
                   .map((r) => DropdownMenuItem(
@@ -497,7 +498,7 @@ class _BucketConfigCardState extends State<_BucketConfigCard> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.wifi_tethering, size: 16),
-                label: Text(d.isTesting ? '测试中...' : '测试连接'),
+                label: Text(d.isTesting ? context.read<LocaleProvider>().t('测试中...', 'Testing...') : context.read<LocaleProvider>().t('测试连接', 'Test Connection')),
               ),
             ),
           ],

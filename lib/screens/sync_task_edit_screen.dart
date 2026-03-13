@@ -133,7 +133,7 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('选择文件夹失败: $e')),
+          SnackBar(content: Text('${context.read<LocaleProvider>().t('选择文件夹失败', 'Failed to select folder')}: $e')),
         );
       }
     }
@@ -143,13 +143,13 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedAccountId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请选择账户')),
+        SnackBar(content: Text(context.read<LocaleProvider>().t('请选择账户', 'Please select account'))),
       );
       return;
     }
     if (_selectedBucketConfigId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请选择存储桶配置')),
+        SnackBar(content: Text(context.read<LocaleProvider>().t('请选择存储桶配置', 'Please select bucket config'))),
       );
       return;
     }
@@ -188,7 +188,7 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('保存失败: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('${context.read<LocaleProvider>().t('保存失败', 'Save failed')}: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -212,7 +212,7 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           PageHeader(
-            title: isEdit ? '编辑同步任务' : '新建同步任务',
+            title: context.read<LocaleProvider>().t(isEdit ? '编辑同步任务' : '新建同步任务', isEdit ? 'Edit Sync Task' : 'New Sync Task'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -220,7 +220,7 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                   context.read<SyncProvider>().clearDraft(widget.taskId);
                   Navigator.of(context, rootNavigator: true).pop();
                 },
-                child: const Text('取消'),
+                child: Text(context.read<LocaleProvider>().t('取消', 'Cancel')),
               ),
               const SizedBox(width: 8),
               FilledButton(
@@ -231,7 +231,7 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('保存'),
+                    : Text(context.read<LocaleProvider>().t('保存', 'Save')),
               ),
             ],
           ),
@@ -245,22 +245,22 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                   children: [
                     // 基本信息
                     _SectionCard(
-                      title: '基本信息',
+                      title: context.read<LocaleProvider>().t('基本信息', 'Basic Info'),
                       children: [
                         TextFormField(
                           controller: _nameCtrl,
-                          decoration: const InputDecoration(
-                            labelText: '任务名称',
-                            hintText: '如：文档备份',
-                            prefixIcon: Icon(Icons.label_outline),
+                          decoration: InputDecoration(
+                            labelText: context.read<LocaleProvider>().t('任务名称', 'Task Name'),
+                            hintText: context.read<LocaleProvider>().t('如：文档备份', 'e.g., Document Backup'),
+                            prefixIcon: const Icon(Icons.label_outline),
                           ),
                           validator: (v) =>
-                              v == null || v.trim().isEmpty ? '请输入任务名称' : null,
+                              v == null || v.trim().isEmpty ? context.read<LocaleProvider>().t('请输入任务名称', 'Please enter task name') : null,
                         ),
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            const Text('启用任务'),
+                            Text(context.read<LocaleProvider>().t('启用任务', 'Enable Task')),
                             const Spacer(),
                             Switch(
                               value: _isEnabled,
@@ -273,16 +273,16 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                     const SizedBox(height: 16),
                     // OSS 配置
                     _SectionCard(
-                      title: 'OSS 配置',
+                      title: context.read<LocaleProvider>().t('OSS 配置', 'OSS Config'),
                       children: [
                         // 账户选择
                         DropdownButtonFormField<String>(
                           initialValue: _selectedAccountId,
-                          decoration: const InputDecoration(
-                            labelText: '选择账户',
-                            prefixIcon: Icon(Icons.person_outline),
+                          decoration: InputDecoration(
+                            labelText: context.read<LocaleProvider>().t('选择账户', 'Select Account'),
+                            prefixIcon: const Icon(Icons.person_outline),
                           ),
-                          hint: const Text('请选择账户'),
+                          hint: Text(context.read<LocaleProvider>().t('请选择账户', 'Please select account')),
                           items: accounts
                               .map((a) => DropdownMenuItem(
                                     value: a.id,
@@ -293,18 +293,18 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                             _selectedAccountId = v;
                             _selectedBucketConfigId = null;
                           }),
-                          validator: (v) => v == null ? '请选择账户' : null,
+                          validator: (v) => v == null ? context.read<LocaleProvider>().t('请选择账户', 'Please select account') : null,
                         ),
                         const SizedBox(height: 12),
                         // 存储桶选择
                         DropdownButtonFormField<String>(
                           initialValue: _selectedBucketConfigId,
-                          decoration: const InputDecoration(
-                            labelText: '选择存储桶',
-                            prefixIcon: Icon(Icons.storage_outlined),
+                          decoration: InputDecoration(
+                            labelText: context.read<LocaleProvider>().t('选择存储桶', 'Select Bucket'),
+                            prefixIcon: const Icon(Icons.storage_outlined),
                           ),
                           hint: Text(
-                              buckets.isEmpty ? '请先选择账户' : '请选择存储桶'),
+                              buckets.isEmpty ? context.read<LocaleProvider>().t('请先选择账户', 'Select account first') : context.read<LocaleProvider>().t('请选择存储桶', 'Please select bucket')),
                           items: buckets
                               .map((b) => DropdownMenuItem<String>(
                                     value: b.id,
@@ -315,16 +315,16 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                               ? null
                               : (v) =>
                                   setState(() => _selectedBucketConfigId = v),
-                          validator: (v) => v == null ? '请选择存储桶' : null,
+                          validator: (v) => v == null ? context.read<LocaleProvider>().t('请选择存储桶', 'Please select bucket') : null,
                         ),
                         const SizedBox(height: 12),
                         // OSS 远端路径
                         TextFormField(
                           controller: _remotePathCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'OSS 路径前缀（可选）',
-                            hintText: '如：backup/docs/（留空则为根目录）',
-                            prefixIcon: Icon(Icons.cloud_outlined),
+                          decoration: InputDecoration(
+                            labelText: context.read<LocaleProvider>().t('OSS 路径前缀（可选）', 'OSS Path Prefix (Optional)'),
+                            hintText: context.read<LocaleProvider>().t('如：backup/docs/（留空则为根目录）', 'e.g., backup/docs/ (empty for root)'),
+                            prefixIcon: const Icon(Icons.cloud_outlined),
                           ),
                         ),
                       ],
@@ -332,7 +332,7 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                     const SizedBox(height: 16),
                     // 本地路径
                     _SectionCard(
-                      title: '本地路径',
+                      title: context.read<LocaleProvider>().t('本地路径', 'Local Path'),
                       children: [
                         Row(
                           children: [
@@ -340,14 +340,14 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                               child: TextFormField(
                                 controller: _localPathCtrl,
                                 readOnly: true,
-                                decoration: const InputDecoration(
-                                  labelText: '本地同步文件夹',
-                                  hintText: '点击右侧按钮选择文件夹',
-                                  prefixIcon: Icon(Icons.folder_outlined),
+                                decoration: InputDecoration(
+                                  labelText: context.read<LocaleProvider>().t('本地同步文件夹', 'Local Sync Folder'),
+                                  hintText: context.read<LocaleProvider>().t('点击右侧按钮选择文件夹', 'Click button to select folder'),
+                                  prefixIcon: const Icon(Icons.folder_outlined),
                                 ),
                                 validator: (v) =>
                                     v == null || v.trim().isEmpty
-                                        ? '请选择本地文件夹'
+                                        ? context.read<LocaleProvider>().t('请选择本地文件夹', 'Please select local folder')
                                         : null,
                               ),
                             ),
@@ -355,7 +355,7 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                             OutlinedButton.icon(
                               onPressed: _pickLocalFolder,
                               icon: const Icon(Icons.folder_open, size: 16),
-                              label: const Text('浏览'),
+                              label: Text(context.read<LocaleProvider>().t('浏览', 'Browse')),
                             ),
                           ],
                         ),
@@ -364,13 +364,13 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                     const SizedBox(height: 16),
                     // 同步设置
                     _SectionCard(
-                      title: '同步设置',
+                      title: context.read<LocaleProvider>().t('同步设置', 'Sync Settings'),
                       children: [
                         // 同步方向
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('同步方向',
+                            Text(context.read<LocaleProvider>().t('同步方向', 'Sync Direction'),
                                 style: Theme.of(context).textTheme.labelLarge),
                             const SizedBox(height: 8),
                             ...SyncDirection.values.map((dir) => InkWell(
@@ -418,9 +418,9 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                         // 同步间隔
                         DropdownButtonFormField<int>(
                           initialValue: _intervalMinutes,
-                          decoration: const InputDecoration(
-                            labelText: '自动同步间隔',
-                            prefixIcon: Icon(Icons.schedule),
+                          decoration: InputDecoration(
+                            labelText: context.read<LocaleProvider>().t('自动同步间隔', 'Auto Sync Interval'),
+                            prefixIcon: const Icon(Icons.schedule),
                           ),
                           items: _intervalOptions
                               .map((o) => DropdownMenuItem(
@@ -444,13 +444,14 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
   }
 
   String _dirDescription(SyncDirection dir) {
+    final locale = context.read<LocaleProvider>();
     switch (dir) {
       case SyncDirection.upload:
-        return '将本地新增/修改的文件上传到 OSS，OSS 中多余的文件不受影响';
+        return locale.t('将本地新增/修改的文件上传到 OSS，OSS 中多余的文件不受影响', 'Upload new/modified local files to OSS, extra OSS files unaffected');
       case SyncDirection.download:
-        return '将 OSS 新增/修改的文件下载到本地，本地多余的文件不受影响';
+        return locale.t('将 OSS 新增/修改的文件下载到本地，本地多余的文件不受影响', 'Download new/modified OSS files to local, extra local files unaffected');
       case SyncDirection.bidirectional:
-        return '双向同步，本地和 OSS 互相补充，以最新修改为准';
+        return locale.t('双向同步，本地和 OSS 互相补充，以最新修改为准', 'Bidirectional sync, local and OSS complement each other, latest wins');
     }
   }
 }
