@@ -20,6 +20,7 @@ class _LogsScreenState extends State<LogsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final syncProvider = context.watch<SyncProvider>();
     final allLogs = syncProvider.logs;
 
@@ -79,19 +80,30 @@ class _LogsScreenState extends State<LogsScreen> {
                   const SizedBox(width: 12),
                   // 任务筛选
                   if (taskNames.length > 1)
-                    DropdownButton<String?>(
-                      value: _filterTaskId,
-                      hint: Text(context.watch<LocaleProvider>().t('全部任务', 'All Tasks')),
-                      underline: const SizedBox(),
-                      items: [
-                        DropdownMenuItem(
-                            value: null, child: Text(context.read<LocaleProvider>().t('全部任务', 'All Tasks'))),
-                        ...taskNames.entries.map((e) => DropdownMenuItem(
-                              value: e.key,
-                              child: Text(e.value),
-                            )),
-                      ],
-                      onChanged: (v) => setState(() => _filterTaskId = v),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: DropdownButton<String?>(
+                        value: _filterTaskId,
+                        hint: Text(context.watch<LocaleProvider>().t('全部任务', 'All Tasks')),
+                        underline: const SizedBox(),
+                        items: [
+                          DropdownMenuItem(
+                              value: null, child: Text(context.read<LocaleProvider>().t('全部任务', 'All Tasks'))),
+                          ...taskNames.entries.map((e) => DropdownMenuItem(
+                                value: e.key,
+                                child: Text(e.value),
+                              )),
+                        ],
+                        onChanged: (v) => setState(() => _filterTaskId = v),
+                      ),
                     ),
                 ],
               ),

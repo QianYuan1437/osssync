@@ -225,16 +225,27 @@ class _LanguageSetting extends StatelessWidget {
           const SizedBox(width: 12),
           Text('语言', style: theme.textTheme.bodyMedium),
           const Spacer(),
-          DropdownButton<String>(
-            value: localeProvider.locale,
-            underline: const SizedBox(),
-            items: const [
-              DropdownMenuItem(value: 'zh', child: Text('简体中文')),
-              DropdownMenuItem(value: 'en', child: Text('English')),
-            ],
-            onChanged: (value) {
-              if (value != null) localeProvider.setLocale(value);
-            },
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: DropdownButton<String>(
+              value: localeProvider.locale,
+              underline: const SizedBox(),
+              items: const [
+                DropdownMenuItem(value: 'zh', child: Text('简体中文')),
+                DropdownMenuItem(value: 'en', child: Text('English')),
+              ],
+              onChanged: (value) {
+                if (value != null) localeProvider.setLocale(value);
+              },
+            ),
           ),
         ],
       ),
