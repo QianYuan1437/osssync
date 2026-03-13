@@ -81,7 +81,8 @@ class _LogsScreenState extends State<LogsScreen> {
                   // 任务筛选
                   if (taskNames.length > 1)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      height: 32,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(8),
@@ -95,6 +96,7 @@ class _LogsScreenState extends State<LogsScreen> {
                         hint: Text(context.watch<LocaleProvider>().t('全部任务', 'All Tasks')),
                         underline: const SizedBox(),
                         borderRadius: BorderRadius.circular(8),
+                        isDense: true,
                         items: [
                           DropdownMenuItem(
                               value: null, child: Text(context.read<LocaleProvider>().t('全部任务', 'All Tasks'))),
