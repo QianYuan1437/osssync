@@ -3,7 +3,7 @@
 ; 下载地址: https://jrsoftware.org/isdl.php
 
 #define AppName "OSS Sync"
-#define AppVersion "1.0.6"
+#define AppVersion "1.0.7"
 #define AppPublisher "Ronald Joe"
 #define AppURL "https://github.com/QianYuan1437/osssync"
 #define AppExeName "osssync.exe"

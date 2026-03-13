@@ -460,6 +460,8 @@ class _BucketConfigCardState extends State<_BucketConfigCard> {
                 prefixIcon: const Icon(Icons.location_on_outlined),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               ),
+              isExpanded: true,
+              menuMaxHeight: 300,
               items: kAliyunRegions
                   .map((r) => DropdownMenuItem(
                         value: r['region'],

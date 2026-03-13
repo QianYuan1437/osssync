@@ -287,6 +287,8 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                           ),
                           hint: Text(context.read<LocaleProvider>().t('请选择账户', 'Please select account')),
+                          isExpanded: true,
+                          menuMaxHeight: 300,
                           items: accounts
                               .map((a) => DropdownMenuItem(
                                     value: a.id,
@@ -310,6 +312,8 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                           ),
                           hint: Text(
                               buckets.isEmpty ? context.read<LocaleProvider>().t('请先选择账户', 'Select account first') : context.read<LocaleProvider>().t('请选择存储桶', 'Please select bucket')),
+                          isExpanded: true,
+                          menuMaxHeight: 300,
                           items: buckets
                               .map((b) => DropdownMenuItem<String>(
                                     value: b.id,
@@ -428,6 +432,8 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                             prefixIcon: const Icon(Icons.schedule),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                           ),
+                          isExpanded: true,
+                          menuMaxHeight: 300,
                           items: _getIntervalOptions(context)
                               .map((o) => DropdownMenuItem(
                                     value: o['value'] as int,
