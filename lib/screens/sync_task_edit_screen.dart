@@ -31,17 +31,20 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
 
   SyncTask? _existingTask;
 
-  static const _intervalOptions = [
-    {'label': '仅手动', 'value': 0},
-    {'label': '每 5 分钟', 'value': 5},
-    {'label': '每 15 分钟', 'value': 15},
-    {'label': '每 30 分钟', 'value': 30},
-    {'label': '每 1 小时', 'value': 60},
-    {'label': '每 2 小时', 'value': 120},
-    {'label': '每 6 小时', 'value': 360},
-    {'label': '每 12 小时', 'value': 720},
-    {'label': '每天', 'value': 1440},
-  ];
+  List<Map<String, dynamic>> _getIntervalOptions(BuildContext context) {
+    final locale = context.read<LocaleProvider>();
+    return [
+      {'label': locale.t('仅手动', 'Manual Only'), 'value': 0},
+      {'label': locale.t('每 5 分钟', 'Every 5 minutes'), 'value': 5},
+      {'label': locale.t('每 15 分钟', 'Every 15 minutes'), 'value': 15},
+      {'label': locale.t('每 30 分钟', 'Every 30 minutes'), 'value': 30},
+      {'label': locale.t('每 1 小时', 'Every 1 hour'), 'value': 60},
+      {'label': locale.t('每 2 小时', 'Every 2 hours'), 'value': 120},
+      {'label': locale.t('每 6 小时', 'Every 6 hours'), 'value': 360},
+      {'label': locale.t('每 12 小时', 'Every 12 hours'), 'value': 720},
+      {'label': locale.t('每天', 'Every day'), 'value': 1440},
+    ];
+  }
 
   @override
   void initState() {
@@ -281,6 +284,7 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                           decoration: InputDecoration(
                             labelText: context.read<LocaleProvider>().t('选择账户', 'Select Account'),
                             prefixIcon: const Icon(Icons.person_outline),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                           ),
                           hint: Text(context.read<LocaleProvider>().t('请选择账户', 'Please select account')),
                           items: accounts
@@ -302,6 +306,7 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                           decoration: InputDecoration(
                             labelText: context.read<LocaleProvider>().t('选择存储桶', 'Select Bucket'),
                             prefixIcon: const Icon(Icons.storage_outlined),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                           ),
                           hint: Text(
                               buckets.isEmpty ? context.read<LocaleProvider>().t('请先选择账户', 'Select account first') : context.read<LocaleProvider>().t('请选择存储桶', 'Please select bucket')),
@@ -421,8 +426,9 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
                           decoration: InputDecoration(
                             labelText: context.read<LocaleProvider>().t('自动同步间隔', 'Auto Sync Interval'),
                             prefixIcon: const Icon(Icons.schedule),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                           ),
-                          items: _intervalOptions
+                          items: _getIntervalOptions(context)
                               .map((o) => DropdownMenuItem(
                                     value: o['value'] as int,
                                     child: Text(o['label'] as String),

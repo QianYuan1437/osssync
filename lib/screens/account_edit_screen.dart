@@ -458,6 +458,7 @@ class _BucketConfigCardState extends State<_BucketConfigCard> {
               decoration: InputDecoration(
                 labelText: context.read<LocaleProvider>().t('地域 (Region)', 'Region'),
                 prefixIcon: const Icon(Icons.location_on_outlined),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               ),
               items: kAliyunRegions
                   .map((r) => DropdownMenuItem(
