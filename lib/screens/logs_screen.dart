@@ -80,32 +80,48 @@ class _LogsScreenState extends State<LogsScreen> {
                   const SizedBox(width: 12),
                   // 任务筛选
                   if (taskNames.length > 1)
-                    Container(
-                      height: 32,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                          width: 1,
+                    PopupMenuButton<String?>(
+                      initialValue: _filterTaskId,
+                      onSelected: (v) => setState(() => _filterTaskId = v),
+                      offset: const Offset(0, 36),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: null,
+                          child: Text(
+                            context.read<LocaleProvider>().t('全部任务', 'All Tasks'),
+                            style: theme.textTheme.labelSmall,
+                          ),
                         ),
-                      ),
-                      child: DropdownButton<String?>(
-                        value: _filterTaskId,
-                        hint: Text(context.watch<LocaleProvider>().t('全部任务', 'All Tasks')),
-                        underline: const SizedBox(),
-                        borderRadius: BorderRadius.circular(8),
-                        isDense: true,
-                        items: [
-                          DropdownMenuItem(
-                              value: null, child: Text(context.read<LocaleProvider>().t('全部任务', 'All Tasks'))),
-                          ...taskNames.entries.map((e) => DropdownMenuItem(
-                                value: e.key,
-                                child: Text(e.value),
-                              )),
-                        ],
-                        onChanged: (v) => setState(() => _filterTaskId = v),
+                        ...taskNames.entries.map((e) => PopupMenuItem(
+                          value: e.key,
+                          child: Text(e.value, style: theme.textTheme.labelSmall),
+                        )),
+                      ],
+                      child: Container(
+                        height: 32,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _filterTaskId == null
+                                  ? context.watch<LocaleProvider>().t('全部任务', 'All Tasks')
+                                  : taskNames[_filterTaskId] ?? '',
+                              style: theme.textTheme.labelSmall,
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(Icons.arrow_drop_down, size: 20, color: theme.colorScheme.onSurface),
+                          ],
+                        ),
                       ),
                     ),
                 ],
