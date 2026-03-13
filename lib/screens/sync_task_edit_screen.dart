@@ -122,11 +122,19 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
   }
 
   Future<void> _pickLocalFolder() async {
-    final result = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: '选择本地同步文件夹',
-    );
-    if (result != null) {
-      setState(() => _localPathCtrl.text = result);
+    try {
+      final result = await FilePicker.platform.getDirectoryPath(
+        dialogTitle: '选择本地同步文件夹',
+      );
+      if (result != null && mounted) {
+        setState(() => _localPathCtrl.text = result);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('选择文件夹失败: $e')),
+        );
+      }
     }
   }
 

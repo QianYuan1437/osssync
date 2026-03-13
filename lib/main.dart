@@ -5,6 +5,7 @@ import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 import 'app.dart';
 import 'providers/account_provider.dart';
+import 'providers/locale_provider.dart';
 import 'providers/sync_provider.dart';
 import 'providers/theme_provider.dart';
 import 'services/storage_service.dart';
@@ -31,6 +32,9 @@ void main() async {
   await storage.init();
 
   // 初始化 Provider
+  final localeProvider = LocaleProvider();
+  await localeProvider.loadLocale();
+
   final themeProvider = ThemeProvider(storage);
   await themeProvider.init();
 
@@ -46,6 +50,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider.value(value: localeProvider),
         ChangeNotifierProvider.value(value: themeProvider),
         ChangeNotifierProvider.value(value: accountProvider),
         ChangeNotifierProvider.value(value: syncProvider),

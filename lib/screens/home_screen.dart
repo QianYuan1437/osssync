@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/sync_task.dart';
 import '../providers/account_provider.dart';
+import '../providers/locale_provider.dart';
 import '../providers/sync_provider.dart';
 import '../services/storage_service.dart';
 import '../utils/app_navigator.dart';
@@ -193,9 +194,45 @@ class _AppSettingsSectionState extends State<_AppSettingsSection> {
           ),
           if (_expanded) ...[
             const Divider(height: 1),
+            const _LanguageSetting(),
+            const Divider(height: 1, indent: 24, endIndent: 24),
             _CloseActionSetting(),
             const SizedBox(height: 8),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// 语言设置项
+class _LanguageSetting extends StatelessWidget {
+  const _LanguageSetting();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final localeProvider = context.watch<LocaleProvider>();
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Row(
+        children: [
+          Icon(Icons.language, size: 18, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 12),
+          Text('语言', style: theme.textTheme.bodyMedium),
+          const Spacer(),
+          DropdownButton<String>(
+            value: localeProvider.locale,
+            underline: const SizedBox(),
+            items: const [
+              DropdownMenuItem(value: 'zh', child: Text('简体中文')),
+              DropdownMenuItem(value: 'en', child: Text('English')),
+            ],
+            onChanged: (value) {
+              if (value != null) localeProvider.setLocale(value);
+            },
+          ),
         ],
       ),
     );
