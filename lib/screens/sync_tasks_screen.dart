@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/sync_task.dart';
 import '../providers/account_provider.dart';
 import '../providers/sync_provider.dart';
+import '../providers/locale_provider.dart';
 import '../utils/app_navigator.dart';
 import '../widgets/common_widgets.dart';
 
@@ -22,12 +23,12 @@ class SyncTasksScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           PageHeader(
-            title: '同步任务',
+            title: context.watch<LocaleProvider>().t('同步任务', 'Sync Tasks'),
             actions: [
               FilledButton.icon(
                 onPressed: () => AppNavigator.toNewTask(context),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('新建任务'),
+                label: Text(context.watch<LocaleProvider>().t('新建任务', 'New Task')),
               ),
             ],
           ),
@@ -35,10 +36,10 @@ class SyncTasksScreen extends StatelessWidget {
             child: tasks.isEmpty
                 ? EmptyState(
                     icon: Icons.sync_disabled,
-                    message: '暂无同步任务',
+                    message: context.watch<LocaleProvider>().t('暂无同步任务', 'No sync tasks'),
                     action: TextButton(
                       onPressed: () => AppNavigator.toNewTask(context),
-                      child: const Text('创建第一个同步任务'),
+                      child: Text(context.watch<LocaleProvider>().t('创建第一个同步任务', 'Create First Task')),
                     ),
                   )
                 : ListView.builder(
@@ -52,8 +53,8 @@ class SyncTasksScreen extends StatelessWidget {
                           .getBucketConfigById(task.bucketConfigId);
                       return _TaskCard(
                         task: task,
-                        accountName: account?.name ?? '未知账户',
-                        bucketName: bucket?.bucketName ?? '未知存储桶',
+                        accountName: account?.name ?? context.watch<LocaleProvider>().t('未知账户', 'Unknown Account'),
+                        bucketName: bucket?.bucketName ?? context.watch<LocaleProvider>().t('未知存储桶', 'Unknown Bucket'),
                         isSyncing: syncProvider.isSyncing(task.id),
                         progress: syncProvider.getProgress(task.id),
                         onSync: () => syncProvider.runSync(task.id),
@@ -76,12 +77,15 @@ class SyncTasksScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除任务'),
-        content: Text('确定要删除同步任务「${task.name}」吗？\n相关日志也将一并删除。'),
+        title: Text(context.read<LocaleProvider>().t('删除任务', 'Delete Task')),
+        content: Text(context.read<LocaleProvider>().t(
+          '确定要删除同步任务「${task.name}」吗？\n相关日志也将一并删除。',
+          'Delete task "${task.name}"?\nRelated logs will also be deleted.',
+        )),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
+            child: Text(context.read<LocaleProvider>().t('取消', 'Cancel')),
           ),
           FilledButton(
             onPressed: () {
@@ -89,7 +93,7 @@ class SyncTasksScreen extends StatelessWidget {
               Navigator.pop(ctx);
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('删除'),
+            child: Text(context.read<LocaleProvider>().t('删除', 'Delete')),
           ),
         ],
       ),
@@ -186,19 +190,21 @@ class _TaskCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 6),
                   ),
-                  child: Text(isSyncing ? '同步中' : '立即同步',
-                      style: const TextStyle(fontSize: 12)),
+                  child: Text(context.watch<LocaleProvider>().t(
+                    isSyncing ? '同步中' : '立即同步',
+                    isSyncing ? 'Syncing' : 'Sync Now',
+                  ), style: const TextStyle(fontSize: 12)),
                 ),
                 const SizedBox(width: 4),
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert, size: 18),
                   itemBuilder: (_) => [
-                    const PopupMenuItem(
-                        value: 'edit', child: Text('编辑任务')),
-                    const PopupMenuItem(
+                    PopupMenuItem(
+                        value: 'edit', child: Text(context.read<LocaleProvider>().t('编辑任务', 'Edit'))),
+                    PopupMenuItem(
                         value: 'delete',
-                        child: Text('删除任务',
-                            style: TextStyle(color: Colors.red))),
+                        child: Text(context.read<LocaleProvider>().t('删除任务', 'Delete'),
+                            style: const TextStyle(color: Colors.red))),
                   ],
                   onSelected: (v) {
                     if (v == 'edit') onEdit();
@@ -224,34 +230,35 @@ class _TaskCard extends StatelessWidget {
             _InfoGrid(children: [
               _InfoItem(
                   icon: Icons.person_outline,
-                  label: '账户',
+                  label: context.watch<LocaleProvider>().t('账户', 'Account'),
                   value: accountName),
               _InfoItem(
                   icon: Icons.storage_outlined,
-                  label: '存储桶',
+                  label: context.watch<LocaleProvider>().t('存储桶', 'Bucket'),
                   value: bucketName),
               _InfoItem(
                   icon: Icons.folder_outlined,
-                  label: '本地路径',
+                  label: context.watch<LocaleProvider>().t('本地路径', 'Local Path'),
                   value: task.localPath),
               _InfoItem(
                   icon: Icons.cloud_outlined,
-                  label: 'OSS 路径',
-                  value: task.remotePath.isEmpty ? '根目录' : task.remotePath),
+                  label: context.watch<LocaleProvider>().t('OSS 路径', 'OSS Path'),
+                  value: task.remotePath.isEmpty ? context.watch<LocaleProvider>().t('根目录', 'Root') : task.remotePath),
               _InfoItem(
                   icon: Icons.swap_horiz,
-                  label: '同步方向',
+                  label: context.watch<LocaleProvider>().t('同步方向', 'Direction'),
                   value: task.syncDirection.label),
               _InfoItem(
                   icon: Icons.schedule,
-                  label: '同步间隔',
-                  value: task.intervalMinutes > 0
-                      ? '每 ${task.intervalMinutes} 分钟'
-                      : '仅手动'),
+                  label: context.watch<LocaleProvider>().t('同步间隔', 'Interval'),
+                  value: context.watch<LocaleProvider>().t(
+                    task.intervalMinutes > 0 ? '每 ${task.intervalMinutes} 分钟' : '仅手动',
+                    task.intervalMinutes > 0 ? 'Every ${task.intervalMinutes} min' : 'Manual',
+                  )),
               if (task.lastSyncAt != null)
                 _InfoItem(
                     icon: Icons.access_time,
-                    label: '上次同步',
+                    label: context.watch<LocaleProvider>().t('上次同步', 'Last Sync'),
                     value: DateFormat('yyyy-MM-dd HH:mm')
                         .format(task.lastSyncAt!.toLocal())),
             ]),

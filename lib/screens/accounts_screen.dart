@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/account_provider.dart';
+import '../providers/locale_provider.dart';
 import '../models/account_model.dart';
 import '../models/bucket_config.dart';
 import '../utils/app_navigator.dart';
@@ -19,12 +20,12 @@ class AccountsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           PageHeader(
-            title: '账户管理',
+            title: context.watch<LocaleProvider>().t('账户管理', 'Accounts'),
             actions: [
               FilledButton.icon(
                 onPressed: () => AppNavigator.toNewAccount(context),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('新增账户'),
+                label: Text(context.watch<LocaleProvider>().t('新增账户', 'Add Account')),
               ),
             ],
           ),
@@ -34,10 +35,10 @@ class AccountsScreen extends StatelessWidget {
                 : provider.accounts.isEmpty
                     ? EmptyState(
                         icon: Icons.manage_accounts_outlined,
-                        message: '暂无账户，请先添加阿里云账户',
+                        message: context.watch<LocaleProvider>().t('暂无账户，请先添加阿里云账户', 'No accounts, please add one'),
                         action: TextButton(
                           onPressed: () => AppNavigator.toNewAccount(context),
-                          child: const Text('添加账户'),
+                          child: Text(context.watch<LocaleProvider>().t('添加账户', 'Add Account')),
                         ),
                       )
                     : ListView.builder(
@@ -68,13 +69,15 @@ class AccountsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('删除账户'),
-        content: Text(
-            '确定要删除账户「${account.name}」吗？\n关联的存储桶配置也将一并删除。'),
+        title: Text(context.read<LocaleProvider>().t('删除账户', 'Delete Account')),
+        content: Text(context.read<LocaleProvider>().t(
+          '确定要删除账户「${account.name}」吗？\n关联的存储桶配置也将一并删除。',
+          'Delete account "${account.name}"?\nAssociated bucket configs will also be deleted.',
+        )),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
+            child: Text(context.read<LocaleProvider>().t('取消', 'Cancel')),
           ),
           FilledButton(
             onPressed: () {
@@ -82,7 +85,7 @@ class AccountsScreen extends StatelessWidget {
               Navigator.pop(ctx);
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('删除'),
+            child: Text(context.read<LocaleProvider>().t('删除', 'Delete')),
           ),
         ],
       ),
@@ -144,12 +147,12 @@ class _AccountCard extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.edit_outlined, size: 18),
                   onPressed: onEdit,
-                  tooltip: '编辑',
+                  tooltip: context.watch<LocaleProvider>().t('编辑', 'Edit'),
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete_outline, size: 18),
                   onPressed: onDelete,
-                  tooltip: '删除',
+                  tooltip: context.watch<LocaleProvider>().t('删除', 'Delete'),
                   color: Colors.red,
                 ),
               ],
@@ -158,7 +161,7 @@ class _AccountCard extends StatelessWidget {
               const SizedBox(height: 12),
               const Divider(height: 1),
               const SizedBox(height: 8),
-              Text('关联存储桶 (${buckets.length})',
+              Text(context.watch<LocaleProvider>().t('关联存储桶 (${buckets.length})', 'Buckets (${buckets.length})'),
                   style: theme.textTheme.labelMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant)),
               const SizedBox(height: 6),

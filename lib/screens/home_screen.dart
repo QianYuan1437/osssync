@@ -31,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           // 顶部标题栏
           PageHeader(
-            title: '控制台',
+            title: context.watch<LocaleProvider>().t('控制台', 'Dashboard'),
             actions: [
               FilledButton.icon(
                 onPressed: syncProvider.hasAnySyncing
@@ -44,7 +44,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.sync, size: 18),
-                label: Text(syncProvider.hasAnySyncing ? '同步中...' : '立即同步全部'),
+                label: Text(context.watch<LocaleProvider>().t(
+                  syncProvider.hasAnySyncing ? '同步中...' : '立即同步全部',
+                  syncProvider.hasAnySyncing ? 'Syncing...' : 'Sync All',
+                )),
               ),
             ],
           ),
@@ -55,28 +58,28 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 _StatCard(
                   icon: Icons.manage_accounts,
-                  label: '账户数',
+                  label: context.watch<LocaleProvider>().t('账户数', 'Accounts'),
                   value: '${accountProvider.accounts.length}',
                   color: theme.colorScheme.primary,
                 ),
                 const SizedBox(width: 12),
                 _StatCard(
                   icon: Icons.sync,
-                  label: '同步任务',
+                  label: context.watch<LocaleProvider>().t('同步任务', 'Tasks'),
                   value: '${tasks.length}',
                   color: Colors.green,
                 ),
                 const SizedBox(width: 12),
                 _StatCard(
                   icon: Icons.check_circle,
-                  label: '已启用',
+                  label: context.watch<LocaleProvider>().t('已启用', 'Enabled'),
                   value: '${tasks.where((t) => t.isEnabled).length}',
                   color: Colors.teal,
                 ),
                 const SizedBox(width: 12),
                 _StatCard(
                   icon: Icons.error_outline,
-                  label: '错误任务',
+                  label: context.watch<LocaleProvider>().t('错误任务', 'Errors'),
                   value:
                       '${tasks.where((t) => t.status == SyncStatus.error).length}',
                   color: Colors.red,
@@ -89,14 +92,14 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
             child: Row(
               children: [
-                Text('同步任务状态',
+                Text(context.watch<LocaleProvider>().t('同步任务状态', 'Task Status'),
                     style: theme.textTheme.titleSmall
                         ?.copyWith(fontWeight: FontWeight.bold)),
                 const Spacer(),
                 TextButton.icon(
                   onPressed: () {},
                   icon: const Icon(Icons.arrow_forward, size: 14),
-                  label: const Text('管理任务'),
+                  label: Text(context.watch<LocaleProvider>().t('管理任务', 'Manage')),
                 ),
               ],
             ),
@@ -105,10 +108,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: tasks.isEmpty
                 ? EmptyState(
                     icon: Icons.sync_disabled,
-                    message: '暂无同步任务',
+                    message: context.watch<LocaleProvider>().t('暂无同步任务', 'No sync tasks'),
                     action: TextButton(
                       onPressed: () => AppNavigator.toNewTask(context),
-                      child: const Text('创建第一个同步任务'),
+                      child: Text(context.watch<LocaleProvider>().t('创建第一个同步任务', 'Create First Task')),
                     ),
                   )
                 : ListView.builder(
@@ -122,8 +125,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           .getBucketConfigById(task.bucketConfigId);
                       return _TaskStatusCard(
                         task: task,
-                        accountName: account?.name ?? '未知账户',
-                        bucketName: bucket?.bucketName ?? '未知存储桶',
+                        accountName: account?.name ?? context.watch<LocaleProvider>().t('未知账户', 'Unknown Account'),
+                        bucketName: bucket?.bucketName ?? context.watch<LocaleProvider>().t('未知存储桶', 'Unknown Bucket'),
                         progress: syncProvider.getProgress(task.id),
                         onSync: () => syncProvider.runSync(task.id),
                         onEdit: () => AppNavigator.toEditTask(context, task.id),
@@ -174,7 +177,7 @@ class _AppSettingsSectionState extends State<_AppSettingsSection> {
                       color: theme.colorScheme.onSurfaceVariant),
                   const SizedBox(width: 8),
                   Text(
-                    '应用设置',
+                    context.watch<LocaleProvider>().t('应用设置', 'App Settings'),
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onSurfaceVariant,
@@ -280,9 +283,9 @@ class _CloseActionSettingState extends State<_CloseActionSetting> {
     setState(() => _isSet = false);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('已重置，下次关闭时将重新询问'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Text(context.read<LocaleProvider>().t('已重置，下次关闭时将重新询问', 'Reset, will ask next time')),
+          duration: const Duration(seconds: 2),
         ),
       );
     }
@@ -302,7 +305,7 @@ class _CloseActionSettingState extends State<_CloseActionSetting> {
                   size: 16, color: theme.colorScheme.onSurfaceVariant),
               const SizedBox(width: 8),
               Text(
-                '关闭窗口行为',
+                context.watch<LocaleProvider>().t('关闭窗口行为', 'Close Window Behavior'),
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(fontWeight: FontWeight.w600),
               ),
@@ -316,7 +319,7 @@ class _CloseActionSettingState extends State<_CloseActionSetting> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    '未设置',
+                    context.watch<LocaleProvider>().t('未设置', 'Not Set'),
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.colorScheme.onTertiaryContainer,
                     ),
@@ -328,7 +331,7 @@ class _CloseActionSettingState extends State<_CloseActionSetting> {
           Row(
             children: [
               _SettingRadioChip(
-                label: '最小化到系统托盘',
+                label: context.watch<LocaleProvider>().t('最小化到系统托盘', 'Minimize to Tray'),
                 icon: Icons.minimize,
                 value: 'minimize',
                 groupValue: _closeAction,
@@ -336,7 +339,7 @@ class _CloseActionSettingState extends State<_CloseActionSetting> {
               ),
               const SizedBox(width: 10),
               _SettingRadioChip(
-                label: '退出程序',
+                label: context.watch<LocaleProvider>().t('退出程序', 'Exit App'),
                 icon: Icons.exit_to_app,
                 value: 'exit',
                 groupValue: _closeAction,
@@ -347,7 +350,7 @@ class _CloseActionSettingState extends State<_CloseActionSetting> {
                 TextButton.icon(
                   onPressed: _onResetSetting,
                   icon: const Icon(Icons.refresh, size: 14),
-                  label: const Text('重置（下次询问）'),
+                  label: Text(context.watch<LocaleProvider>().t('重置（下次询问）', 'Reset')),
                   style: TextButton.styleFrom(
                     foregroundColor: theme.colorScheme.onSurfaceVariant,
                     textStyle: theme.textTheme.bodySmall,
@@ -358,9 +361,14 @@ class _CloseActionSettingState extends State<_CloseActionSetting> {
           ),
           const SizedBox(height: 4),
           Text(
-            _isSet
-                ? '当前设置：点击关闭按钮将${_closeAction == 'minimize' ? '最小化到系统托盘' : '退出程序'}'
-                : '尚未设置，下次点击关闭按钮时将弹出选择对话框',
+            context.watch<LocaleProvider>().t(
+              _isSet
+                  ? '当前设置：点击关闭按钮将${_closeAction == 'minimize' ? '最小化到系统托盘' : '退出程序'}'
+                  : '尚未设置，下次点击关闭按钮时将弹出选择对话框',
+              _isSet
+                  ? 'Current: ${_closeAction == 'minimize' ? 'Minimize to tray' : 'Exit app'}'
+                  : 'Not set, will ask next time',
+            ),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               fontStyle: FontStyle.italic,
@@ -566,7 +574,7 @@ class _TaskStatusCard extends StatelessWidget {
                       color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: Text('已禁用',
+                    child: Text(context.watch<LocaleProvider>().t('已禁用', 'Disabled'),
                         style: theme.textTheme.labelSmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant)),
                   ),
@@ -574,7 +582,7 @@ class _TaskStatusCard extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.edit_outlined, size: 16),
                   onPressed: onEdit,
-                  tooltip: '编辑',
+                  tooltip: context.watch<LocaleProvider>().t('编辑', 'Edit'),
                   visualDensity: VisualDensity.compact,
                 ),
                 const SizedBox(width: 4),
@@ -585,8 +593,10 @@ class _TaskStatusCard extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   ),
-                  child: Text(isSyncing ? '同步中' : '立即同步',
-                      style: const TextStyle(fontSize: 12)),
+                  child: Text(context.watch<LocaleProvider>().t(
+                    isSyncing ? '同步中' : '立即同步',
+                    isSyncing ? 'Syncing' : 'Sync Now',
+                  ), style: const TextStyle(fontSize: 12)),
                 ),
               ],
             ),
@@ -619,12 +629,17 @@ class _TaskStatusCard extends StatelessWidget {
                 if (task.intervalMinutes > 0)
                   _InfoChip(
                       icon: Icons.schedule,
-                      label: '每 ${task.intervalMinutes} 分钟'),
+                      label: context.watch<LocaleProvider>().t(
+                        '每 ${task.intervalMinutes} 分钟',
+                        'Every ${task.intervalMinutes} min',
+                      )),
                 if (task.lastSyncAt != null)
                   _InfoChip(
                       icon: Icons.access_time,
-                      label:
-                          '上次: ${DateFormat('MM-dd HH:mm').format(task.lastSyncAt!.toLocal())}'),
+                      label: context.watch<LocaleProvider>().t(
+                        '上次: ${DateFormat('MM-dd HH:mm').format(task.lastSyncAt!.toLocal())}',
+                        'Last: ${DateFormat('MM-dd HH:mm').format(task.lastSyncAt!.toLocal())}',
+                      )),
               ],
             ),
             if (isError && task.lastError != null) ...[

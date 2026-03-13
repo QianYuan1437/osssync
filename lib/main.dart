@@ -86,15 +86,17 @@ class _AppWithTrayState extends State<AppWithTray>
         ? 'assets/icons/tray_icon.ico'
         : 'assets/icons/cloud.png';
     await trayManager.setIcon(iconPath);
+    if (!mounted) return;
+    final locale = context.read<LocaleProvider>();
     final menu = Menu(items: [
-      MenuItem(key: 'show', label: '显示主窗口'),
+      MenuItem(key: 'show', label: locale.t('显示主窗口', 'Show Window')),
       MenuItem.separator(),
-      MenuItem(key: 'sync_all', label: '立即同步全部'),
+      MenuItem(key: 'sync_all', label: locale.t('立即同步全部', 'Sync All')),
       MenuItem.separator(),
-      MenuItem(key: 'quit', label: '退出'),
+      MenuItem(key: 'quit', label: locale.t('退出', 'Quit')),
     ]);
     await trayManager.setContextMenu(menu);
-    await trayManager.setToolTip('OSS Sync - 阿里云 OSS 同步工具');
+    await trayManager.setToolTip(locale.t('OSS Sync - 阿里云 OSS 同步工具', 'OSS Sync - Aliyun OSS Sync Tool'));
   }
 
   @override

@@ -5,6 +5,7 @@ import '../models/bucket_config.dart';
 import '../models/sync_task.dart';
 import '../providers/account_provider.dart';
 import '../providers/sync_provider.dart';
+import '../providers/locale_provider.dart';
 import '../widgets/common_widgets.dart';
 
 class SyncTaskEditScreen extends StatefulWidget {
@@ -124,7 +125,7 @@ class _SyncTaskEditScreenState extends State<SyncTaskEditScreen> {
   Future<void> _pickLocalFolder() async {
     try {
       final result = await FilePicker.platform.getDirectoryPath(
-        dialogTitle: '选择本地同步文件夹',
+        dialogTitle: context.read<LocaleProvider>().t('选择本地同步文件夹', 'Select Local Folder'),
       );
       if (result != null && mounted) {
         setState(() => _localPathCtrl.text = result);

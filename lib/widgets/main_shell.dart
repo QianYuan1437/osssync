@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/sync_provider.dart';
+import '../providers/locale_provider.dart';
 import '../screens/home_screen.dart';
 import '../screens/accounts_screen.dart';
 import '../screens/sync_tasks_screen.dart';
@@ -155,21 +156,21 @@ class _SideNav extends StatelessWidget {
           _NavItem(
             icon: Icons.dashboard_outlined,
             activeIcon: Icons.dashboard,
-            label: '控制台',
+            label: context.watch<LocaleProvider>().t('控制台', 'Dashboard'),
             isActive: currentIndex == 0,
             onTap: () => onTap(0),
           ),
           _NavItem(
             icon: Icons.manage_accounts_outlined,
             activeIcon: Icons.manage_accounts,
-            label: '账户管理',
+            label: context.watch<LocaleProvider>().t('账户管理', 'Accounts'),
             isActive: currentIndex == 1,
             onTap: () => onTap(1),
           ),
           _NavItem(
             icon: Icons.sync_outlined,
             activeIcon: Icons.sync,
-            label: '同步任务',
+            label: context.watch<LocaleProvider>().t('同步任务', 'Sync Tasks'),
             isActive: currentIndex == 2,
             onTap: () => onTap(2),
             badge: syncProvider.hasAnySyncing ? '●' : null,
@@ -177,14 +178,14 @@ class _SideNav extends StatelessWidget {
           _NavItem(
             icon: Icons.history_outlined,
             activeIcon: Icons.history,
-            label: '同步日志',
+            label: context.watch<LocaleProvider>().t('同步日志', 'Sync Logs'),
             isActive: currentIndex == 3,
             onTap: () => onTap(3),
           ),
           _NavItem(
             icon: Icons.folder_open_outlined,
             activeIcon: Icons.folder_open,
-            label: '文件预览',
+            label: context.watch<LocaleProvider>().t('文件预览', 'File Preview'),
             isActive: currentIndex == 4,
             onTap: () => onTap(4),
           ),
@@ -203,7 +204,10 @@ class _SideNav extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  isDark ? '深色模式' : '浅色模式',
+                  context.watch<LocaleProvider>().t(
+                    isDark ? '深色模式' : '浅色模式',
+                    isDark ? 'Dark Mode' : 'Light Mode',
+                  ),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

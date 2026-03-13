@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../models/sync_log.dart';
 import '../providers/sync_provider.dart';
+import '../providers/locale_provider.dart';
 import '../widgets/common_widgets.dart';
 
 class LogsScreen extends StatefulWidget {
@@ -41,13 +42,13 @@ class _LogsScreenState extends State<LogsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           PageHeader(
-            title: '同步日志',
+            title: context.watch<LocaleProvider>().t('同步日志', 'Sync Logs'),
             actions: [
               if (allLogs.isNotEmpty)
                 TextButton.icon(
                   onPressed: () => _confirmClear(context, syncProvider),
                   icon: const Icon(Icons.delete_sweep_outlined, size: 16),
-                  label: const Text('清空日志'),
+                  label: Text(context.watch<LocaleProvider>().t('清空日志', 'Clear Logs')),
                   style: TextButton.styleFrom(foregroundColor: Colors.red),
                 ),
             ],
@@ -60,7 +61,7 @@ class _LogsScreenState extends State<LogsScreen> {
                 children: [
                   // 级别筛选
                   _FilterChip(
-                    label: '全部级别',
+                    label: context.watch<LocaleProvider>().t('全部级别', 'All Levels'),
                     isSelected: _filterLevel == null,
                     onTap: () => setState(() => _filterLevel = null),
                   ),
@@ -80,11 +81,11 @@ class _LogsScreenState extends State<LogsScreen> {
                   if (taskNames.length > 1)
                     DropdownButton<String?>(
                       value: _filterTaskId,
-                      hint: const Text('全部任务'),
+                      hint: Text(context.watch<LocaleProvider>().t('全部任务', 'All Tasks')),
                       underline: const SizedBox(),
                       items: [
-                        const DropdownMenuItem(
-                            value: null, child: Text('全部任务')),
+                        DropdownMenuItem(
+                            value: null, child: Text(context.read<LocaleProvider>().t('全部任务', 'All Tasks'))),
                         ...taskNames.entries.map((e) => DropdownMenuItem(
                               value: e.key,
                               child: Text(e.value),
@@ -100,7 +101,10 @@ class _LogsScreenState extends State<LogsScreen> {
             child: logs.isEmpty
                 ? EmptyState(
                     icon: Icons.history_outlined,
-                    message: allLogs.isEmpty ? '暂无同步日志' : '没有符合条件的日志',
+                    message: context.watch<LocaleProvider>().t(
+                      allLogs.isEmpty ? '暂无同步日志' : '没有符合条件的日志',
+                      allLogs.isEmpty ? 'No sync logs' : 'No matching logs',
+                    ),
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
@@ -119,12 +123,12 @@ class _LogsScreenState extends State<LogsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('清空日志'),
-        content: const Text('确定要清空所有同步日志吗？此操作不可撤销。'),
+        title: Text(context.read<LocaleProvider>().t('清空日志', 'Clear Logs')),
+        content: Text(context.read<LocaleProvider>().t('确定要清空所有同步日志吗？此操作不可撤销。', 'Clear all logs? This cannot be undone.')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('取消'),
+            child: Text(context.read<LocaleProvider>().t('取消', 'Cancel')),
           ),
           FilledButton(
             onPressed: () {
@@ -132,7 +136,7 @@ class _LogsScreenState extends State<LogsScreen> {
               Navigator.pop(ctx);
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('清空'),
+            child: Text(context.read<LocaleProvider>().t('清空', 'Clear')),
           ),
         ],
       ),
@@ -242,7 +246,7 @@ class _LogCard extends StatelessWidget {
                 // 复制按钮
                 IconButton(
                   icon: const Icon(Icons.copy, size: 16),
-                  tooltip: '复制日志',
+                  tooltip: context.watch<LocaleProvider>().t('复制日志', 'Copy Log'),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   onPressed: () => _copyLog(context),
@@ -283,17 +287,17 @@ class _LogCard extends StatelessWidget {
                   if (log.filesUploaded > 0)
                     _StatBadge(
                         icon: Icons.upload,
-                        label: '上传 ${log.filesUploaded}',
+                        label: context.watch<LocaleProvider>().t('上传 ${log.filesUploaded}', 'Upload ${log.filesUploaded}'),
                         color: Colors.blue),
                   if (log.filesDownloaded > 0)
                     _StatBadge(
                         icon: Icons.download,
-                        label: '下载 ${log.filesDownloaded}',
+                        label: context.watch<LocaleProvider>().t('下载 ${log.filesDownloaded}', 'Download ${log.filesDownloaded}'),
                         color: Colors.green),
                   if (log.filesSkipped > 0)
                     _StatBadge(
                         icon: Icons.skip_next,
-                        label: '跳过 ${log.filesSkipped}',
+                        label: context.watch<LocaleProvider>().t('跳过 ${log.filesSkipped}', 'Skip ${log.filesSkipped}'),
                         color: Colors.grey),
                 ],
               ),
@@ -305,20 +309,21 @@ class _LogCard extends StatelessWidget {
   }
 
   void _copyLog(BuildContext context) {
+    final locale = context.read<LocaleProvider>();
     final buffer = StringBuffer();
     buffer.writeln('【${log.level.label}】${log.taskName}');
-    buffer.writeln('时间: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(log.timestamp.toLocal())}');
+    buffer.writeln('${locale.t('时间', 'Time')}: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(log.timestamp.toLocal())}');
     if (log.duration != null) {
-      buffer.writeln('耗时: ${_formatDuration(log.duration!)}');
+      buffer.writeln('${locale.t('耗时', 'Duration')}: ${_formatDuration(log.duration!)}');
     }
-    buffer.writeln('消息: ${log.message}');
+    buffer.writeln('${locale.t('消息', 'Message')}: ${log.message}');
     if (log.filesUploaded > 0 || log.filesDownloaded > 0 || log.filesSkipped > 0) {
-      buffer.writeln('统计: 上传${log.filesUploaded} 下载${log.filesDownloaded} 跳过${log.filesSkipped}');
+      buffer.writeln('${locale.t('统计', 'Stats')}: ${locale.t('上传', 'Upload')}${log.filesUploaded} ${locale.t('下载', 'Download')}${log.filesDownloaded} ${locale.t('跳过', 'Skip')}${log.filesSkipped}');
     }
     
     Clipboard.setData(ClipboardData(text: buffer.toString()));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('日志已复制到剪贴板'), duration: Duration(seconds: 2)),
+      SnackBar(content: Text(locale.t('日志已复制到剪贴板', 'Log copied to clipboard')), duration: const Duration(seconds: 2)),
     );
   }
 
