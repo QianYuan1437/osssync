@@ -94,6 +94,7 @@ class _LogsScreenState extends State<LogsScreen> {
                         value: _filterTaskId,
                         hint: Text(context.watch<LocaleProvider>().t('全部任务', 'All Tasks')),
                         underline: const SizedBox(),
+                        borderRadius: BorderRadius.circular(8),
                         items: [
                           DropdownMenuItem(
                               value: null, child: Text(context.read<LocaleProvider>().t('全部任务', 'All Tasks'))),
