@@ -147,7 +147,7 @@ class SyncProvider extends ChangeNotifier {
     final bucket = getBucketConfig?.call(task.bucketConfigId);
 
     if (account == null || bucket == null) {
-      _addErrorLog(task, '账户或存储桶配置不存在');
+      await _addErrorLog(task, '账户或存储桶配置不存在');
       return;
     }
 
@@ -182,7 +182,7 @@ class SyncProvider extends ChangeNotifier {
         status: SyncStatus.error,
         lastError: e.toString(),
       );
-      _addErrorLog(task, '同步异常: $e');
+      await _addErrorLog(task, '同步异常: $e');
     } finally {
       _syncingTaskIds.remove(taskId);
       _progressMessages.remove(taskId);
@@ -200,7 +200,7 @@ class SyncProvider extends ChangeNotifier {
     runSync(taskId);
   }
 
-  void _addErrorLog(SyncTask task, String message) {
+  Future<void> _addErrorLog(SyncTask task, String message) async {
     final log = SyncLog(
       id: _uuid.v4(),
       taskId: task.id,
@@ -210,7 +210,7 @@ class SyncProvider extends ChangeNotifier {
       message: message,
     );
     _logs.insert(0, log);
-    _storage.appendSyncLog(log);
+    await _storage.appendSyncLog(log);
     notifyListeners();
   }
 
