@@ -8,6 +8,7 @@ import '../screens/accounts_screen.dart';
 import '../screens/sync_tasks_screen.dart';
 import '../screens/logs_screen.dart';
 import '../screens/file_preview_screen.dart';
+import '../screens/remote_files_screen.dart';
 
 /// 主框架：左侧导航 + 右侧 IndexedStack 页面区域
 /// 完全使用原生 Navigator，不依赖 go_router
@@ -44,6 +45,7 @@ class _MainShellState extends State<MainShell> {
                 SyncTasksScreen(),
                 LogsScreen(),
                 FilePreviewScreen(),
+                RemoteFilesScreen(),
               ],
             ),
           ),
@@ -188,6 +190,13 @@ class _SideNav extends StatelessWidget {
             label: context.watch<LocaleProvider>().t('文件预览', 'File Preview'),
             isActive: currentIndex == 4,
             onTap: () => onTap(4),
+          ),
+          _NavItem(
+            icon: Icons.cloud_outlined,
+            activeIcon: Icons.cloud,
+            label: context.watch<LocaleProvider>().t('远程文件', 'Remote Files'),
+            isActive: currentIndex == 5,
+            onTap: () => onTap(5),
           ),
           const Spacer(),
           const Divider(height: 1),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/account_edit_screen.dart';
 import '../screens/sync_task_edit_screen.dart';
+import '../screens/remote_browser_screen.dart';
 
 /// 应用内页面导航辅助类
 /// 使用原生 Navigator.push 替代 go_router，避免 IndexedStack 中的 context 问题
@@ -38,5 +39,18 @@ class AppNavigator {
   /// 返回上一页
   static void pop(BuildContext context) {
     Navigator.of(context, rootNavigator: true).pop();
+  }
+
+  /// 跳转到云端文件浏览器
+  static Future<void> toRemoteBrowser(
+      BuildContext context, String accountId, String bucketConfigId) {
+    return Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        builder: (_) => RemoteBrowserScreen(
+          accountId: accountId,
+          bucketConfigId: bucketConfigId,
+        ),
+      ),
+    );
   }
 }
