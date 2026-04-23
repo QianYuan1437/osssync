@@ -725,8 +725,8 @@ class _WindowSizeSetting extends StatefulWidget {
 }
 
 class _WindowSizeSettingState extends State<_WindowSizeSetting> {
-  late String _selectedSize;
-  final _presetSizes = [
+  String? _selectedSize;
+  final List<Map<String, dynamic>> _presetSizes = [
     {'label': '800 × 600', 'width': 800, 'height': 600},
     {'label': '1024 × 768', 'width': 1024, 'height': 768},
     {'label': '1280 × 720', 'width': 1280, 'height': 720},
@@ -739,18 +739,24 @@ class _WindowSizeSettingState extends State<_WindowSizeSetting> {
   @override
   void initState() {
     super.initState();
-    _loadSettings();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSettings();
+    });
   }
 
   void _loadSettings() {
+    if (!mounted) return;
     final storage = context.read<StorageService>();
     final width = storage.getWindowWidth();
     final height = storage.getWindowHeight();
-    _selectedSize = '$width × $height';
-    // 如果当前尺寸不在预设中，添加为自定义选项
-    if (!_presetSizes.any((s) => s['label'] == _selectedSize)) {
-      _selectedSize = '自定义';
+    final currentSize = '$width × $height';
+    // 如果当前尺寸不在预设中，使用第一个作为默认值
+    if (_presetSizes.any((s) => s['label'] == currentSize)) {
+      _selectedSize = currentSize;
+    } else {
+      _selectedSize = _presetSizes.first['label'] as String;
     }
+    if (mounted) setState(() {});
   }
 
   Future<void> _onSizeChanged(String? label) async {

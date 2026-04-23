@@ -10,7 +10,7 @@ import '../services/oss_service.dart';
 import '../widgets/common_widgets.dart';
 
 /// 云端文件浏览器页面
-/// 支持浏览、上传、下载、删除云端文件，支持批量操作
+/// 支持浏览、上传、下载、删除云端文件，支持批量操作和范围选择
 class RemoteBrowserScreen extends StatefulWidget {
   final String accountId;
   final String bucketConfigId;
@@ -27,11 +27,11 @@ class RemoteBrowserScreen extends StatefulWidget {
 
 class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
   OssService? _ossService;
-  List<OssObject> _allObjects = []; // 原始对象列表
-  List<OssObject> _displayedObjects = []; // 显示的对象列表（文件夹+文件）
-  List<String> _folderNames = []; // 当前层的文件夹列表
-  Set<String> _selectedFileKeys = {}; // 选中的文件key集合
-  List<String> _prefixStack = ['']; // 目录导航栈
+  List<OssObject> _allObjects = [];
+  List<OssObject> _displayedFiles = [];
+  List<String> _displayedFolders = [];
+  final Set<String> _selectedItems = {};
+  List<String> _prefixStack = [''];
   bool _isLoading = false;
   bool _isInitialized = false;
   String? _error;
@@ -41,6 +41,9 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
   AccountModel? _account;
   BucketConfig? _bucketConfig;
   final FocusNode _focusNode = FocusNode();
+
+  int? _lastSelectedIndex;
+  bool _isShiftPressed = false;
 
   @override
   void initState() {
@@ -72,7 +75,8 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
     setState(() {
       _isLoading = true;
       _error = null;
-      _selectedFileKeys.clear();
+      _selectedItems.clear();
+      _lastSelectedIndex = null;
     });
 
     try {
@@ -95,7 +99,6 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
   void _processDisplayObjects() {
     final relativePrefix = _currentPrefix ?? '';
 
-    // 提取当前层的文件夹
     final currentFolders = <String>{};
     final currentFiles = <OssObject>[];
 
@@ -111,13 +114,15 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
       }
     }
 
-    _folderNames = currentFolders.toList()..sort();
-    _displayedObjects = currentFiles..sort((a, b) => a.key.compareTo(b.key));
+    currentFiles.sort((a, b) => a.key.compareTo(b.key));
+
+    _displayedFolders = currentFolders.toList()..sort();
+    _displayedFiles = currentFiles;
 
     // 应用搜索过滤
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
-      _displayedObjects = _displayedObjects
+      _displayedFiles = _displayedFiles
           .where((obj) => obj.key.toLowerCase().contains(query))
           .toList();
     }
@@ -164,33 +169,70 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
     return _prefixStack.last.split('/').where((s) => s.isNotEmpty).toList();
   }
 
-  bool get _hasSelection => _selectedFileKeys.isNotEmpty;
+  bool get _hasSelection => _selectedItems.isNotEmpty;
+  int get _totalItems => _displayedFolders.length + _displayedFiles.length;
   bool get _isAllSelected =>
-      _displayedObjects.isNotEmpty &&
-      _selectedFileKeys.length == _displayedObjects.length;
+      _totalItems > 0 && _selectedItems.length == _totalItems;
+
+  // 计算文件夹的完整路径
+  String _getFolderPath(String folderName) {
+    return '${_currentPrefix ?? ''}$folderName/';
+  }
+
+  // 计算文件的完整路径
+  String _getFilePath(OssObject file) {
+    return file.key;
+  }
+
+  // 切换单个选择项
+  void _toggleSelection(String path, {bool isShift = false, int? currentIndex}) {
+    setState(() {
+      if (isShift && _lastSelectedIndex != null && currentIndex != null) {
+        // Shift 多选：选择范围内所有项
+        final start = _lastSelectedIndex!;
+        final end = currentIndex;
+        final minIndex = start < end ? start : end;
+        final maxIndex = start < end ? end : start;
+
+        for (int i = minIndex; i <= maxIndex; i++) {
+          String pathToAdd;
+          if (i < _displayedFolders.length) {
+            pathToAdd = _getFolderPath(_displayedFolders[i]);
+          } else {
+            pathToAdd = _getFilePath(_displayedFiles[i - _displayedFolders.length]);
+          }
+          _selectedItems.add(pathToAdd);
+        }
+      } else {
+        if (_selectedItems.contains(path)) {
+          _selectedItems.remove(path);
+        } else {
+          _selectedItems.add(path);
+        }
+        _lastSelectedIndex = currentIndex;
+      }
+    });
+  }
 
   void _toggleSelectAll() {
     setState(() {
       if (_isAllSelected) {
-        _selectedFileKeys.clear();
+        _selectedItems.clear();
+        _lastSelectedIndex = null;
       } else {
-        _selectedFileKeys = _displayedObjects.map((obj) => obj.key).toSet();
+        _selectedItems.clear();
+        for (final folder in _displayedFolders) {
+          _selectedItems.add(_getFolderPath(folder));
+        }
+        for (final file in _displayedFiles) {
+          _selectedItems.add(_getFilePath(file));
+        }
       }
     });
   }
 
-  void _toggleFileSelection(String key) {
-    setState(() {
-      if (_selectedFileKeys.contains(key)) {
-        _selectedFileKeys.remove(key);
-      } else {
-        _selectedFileKeys.add(key);
-      }
-    });
-  }
-
-  Future<void> _deleteSelectedFiles() async {
-    if (_selectedFileKeys.isEmpty || _ossService == null) return;
+  Future<void> _deleteSelectedItems() async {
+    if (_selectedItems.isEmpty || _ossService == null) return;
 
     final locale = context.read<LocaleProvider>();
     final confirmed = await showDialog<bool>(
@@ -198,8 +240,8 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
       builder: (context) => AlertDialog(
         title: Text(locale.t('确认删除', 'Confirm Delete')),
         content: Text(locale.t(
-          '确定要删除选中的 ${_selectedFileKeys.length} 个文件吗？此操作不可撤销。',
-          'Are you sure you want to delete ${_selectedFileKeys.length} selected files? This cannot be undone.',
+          '确定要删除选中的 ${_selectedItems.length} 个项目吗？此操作不可撤销。',
+          'Are you sure you want to delete ${_selectedItems.length} selected items? This cannot be undone.',
         )),
         actions: [
           TextButton(
@@ -220,9 +262,9 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
       int successCount = 0;
       int failCount = 0;
 
-      for (final key in _selectedFileKeys.toList()) {
+      for (final path in _selectedItems.toList()) {
         try {
-          await _ossService!.deleteObject(key);
+          await _ossService!.deleteObject(path);
           successCount++;
         } catch (e) {
           failCount++;
@@ -230,7 +272,8 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
       }
 
       setState(() {
-        _selectedFileKeys.clear();
+        _selectedItems.clear();
+        _lastSelectedIndex = null;
         _isLoading = false;
       });
 
@@ -430,22 +473,26 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
       focusNode: _focusNode,
       autofocus: true,
       onKeyEvent: (event) {
-        // Ctrl+A: 全选
-        if (event is KeyDownEvent &&
-            HardwareKeyboard.instance.isControlPressed &&
-            event.logicalKey == LogicalKeyboardKey.keyA) {
-          _toggleSelectAll();
-        }
-        // Delete: 删除选中
-        if (event is KeyDownEvent &&
-            event.logicalKey == LogicalKeyboardKey.delete &&
-            _hasSelection) {
-          _deleteSelectedFiles();
-        }
-        // Escape: 取消选择
-        if (event is KeyDownEvent &&
-            event.logicalKey == LogicalKeyboardKey.escape) {
-          setState(() => _selectedFileKeys.clear());
+        if (event is KeyDownEvent) {
+          _isShiftPressed = HardwareKeyboard.instance.isShiftPressed;
+
+          if (HardwareKeyboard.instance.isControlPressed &&
+              event.logicalKey == LogicalKeyboardKey.keyA) {
+            _toggleSelectAll();
+          } else if (event.logicalKey == LogicalKeyboardKey.delete &&
+              _hasSelection) {
+            _deleteSelectedItems();
+          } else if (event.logicalKey == LogicalKeyboardKey.escape) {
+            setState(() {
+              _selectedItems.clear();
+              _lastSelectedIndex = null;
+            });
+          }
+        } else if (event is KeyUpEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.shiftLeft ||
+              event.logicalKey == LogicalKeyboardKey.shiftRight) {
+            _isShiftPressed = false;
+          }
         }
       },
       child: Scaffold(
@@ -465,9 +512,9 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
                 const SizedBox(width: 8),
                 if (_hasSelection) ...[
                   FilledButton.icon(
-                    onPressed: _deleteSelectedFiles,
+                    onPressed: _deleteSelectedItems,
                     icon: const Icon(Icons.delete, size: 18),
-                    label: Text(locale.t('删除 (${_selectedFileKeys.length})', 'Delete (${_selectedFileKeys.length})')),
+                    label: Text(locale.t('删除 (${_selectedItems.length})', 'Delete (${_selectedItems.length})')),
                     style: FilledButton.styleFrom(backgroundColor: Colors.red),
                   ),
                   const SizedBox(width: 8),
@@ -479,7 +526,7 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
                 ),
                 const SizedBox(width: 8),
                 IconButton.outlined(
-                  onPressed: _loadObjects,
+                  onPressed: _isLoading ? null : _loadObjects,
                   icon: _isLoading
                       ? const SizedBox(
                           width: 18,
@@ -614,9 +661,24 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
                       onChanged: (_) => _toggleSelectAll(),
                     ),
                     Text(locale.t('全选', 'Select All')),
+                    if (_isShiftPressed)
+                      Container(
+                        margin: const EdgeInsets.only(left: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'Shift',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                      ),
                     const Spacer(),
                     Text(
-                      locale.t('已选择 ${_selectedFileKeys.length} 个文件', '${_selectedFileKeys.length} files selected'),
+                      locale.t('已选择 ${_selectedItems.length} 个项目', '${_selectedItems.length} items selected'),
                     ),
                   ],
                 ),
@@ -648,8 +710,7 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
       );
     }
 
-    final totalItems = _folderNames.length + _displayedObjects.length;
-    if (totalItems == 0) {
+    if (_totalItems == 0) {
       return EmptyState(
         icon: _searchQuery.isNotEmpty ? Icons.search_off : Icons.folder_open,
         message: _searchQuery.isNotEmpty
@@ -667,40 +728,50 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-      itemCount: totalItems,
+      itemCount: _totalItems,
       itemBuilder: (context, index) {
         // 文件夹
-        if (index < _folderNames.length) {
-          final folderName = _folderNames[index];
+        if (index < _displayedFolders.length) {
+          final folderName = _displayedFolders[index];
+          final folderPath = _getFolderPath(folderName);
+          final isSelected = _selectedItems.contains(folderPath);
+
           return _FileListTile(
-            isFolder: true,
             icon: Icons.folder,
             iconColor: theme.colorScheme.primary,
             title: folderName,
             subtitle: locale.t('文件夹', 'Folder'),
-            isSelected: false,
-            onTap: () => _navigateToPrefix('${_currentPrefix ?? ''}$folderName/'),
-            onCheckboxChanged: null,
+            isSelected: isSelected,
+            onTap: () => _navigateToPrefix(folderPath),
+            onCheckboxChanged: (value) => _toggleSelection(
+              folderPath,
+              isShift: _isShiftPressed,
+              currentIndex: index,
+            ),
           );
         }
 
         // 文件
-        final fileIndex = index - _folderNames.length;
-        final obj = _displayedObjects[fileIndex];
+        final fileIndex = index - _displayedFolders.length;
+        final obj = _displayedFiles[fileIndex];
         final fileName = obj.key.split('/').last;
-        final isSelected = _selectedFileKeys.contains(obj.key);
+        final filePath = _getFilePath(obj);
+        final isSelected = _selectedItems.contains(filePath);
         final isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']
             .any((ext) => fileName.toLowerCase().endsWith('.$ext'));
 
         return _FileListTile(
-          isFolder: false,
           icon: isImage ? Icons.image : Icons.insert_drive_file,
           iconColor: theme.colorScheme.secondary,
           title: fileName,
           subtitle: '${_formatFileSize(obj.size)} • ${obj.lastModified.toString().substring(0, 16)}',
           isSelected: isSelected,
           onTap: () {},
-          onCheckboxChanged: (value) => _toggleFileSelection(obj.key),
+          onCheckboxChanged: (value) => _toggleSelection(
+            filePath,
+            isShift: _isShiftPressed,
+            currentIndex: index,
+          ),
           trailing: _hasSelection
               ? null
               : Row(
@@ -725,7 +796,6 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
 }
 
 class _FileListTile extends StatelessWidget {
-  final bool isFolder;
   final IconData icon;
   final Color iconColor;
   final String title;
@@ -736,7 +806,6 @@ class _FileListTile extends StatelessWidget {
   final Widget? trailing;
 
   const _FileListTile({
-    required this.isFolder,
     required this.icon,
     required this.iconColor,
     required this.title,
