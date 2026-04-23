@@ -300,6 +300,12 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
           PageHeader(
             title: locale.t('远程文件', 'Remote Files'),
             actions: [
+              IconButton.outlined(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back, size: 18),
+                tooltip: locale.t('返回', 'Back'),
+              ),
+              const SizedBox(width: 8),
               FilledButton.icon(
                 onPressed: _isLoading ? null : _uploadFile,
                 icon: const Icon(Icons.cloud_upload, size: 18),

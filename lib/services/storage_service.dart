@@ -14,6 +14,8 @@ class StorageService {
   static const _themeModeKey = 'theme_mode';
   static const _closeActionKey = 'close_action';
   static const _closeActionSetKey = 'close_action_set';
+  static const _windowWidthKey = 'window_width';
+  static const _windowHeightKey = 'window_height';
   static const _maxLogs = 500;
 
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
@@ -63,6 +65,28 @@ class StorageService {
 
   Future<void> resetCloseActionSetting() async {
     await prefs.remove(_closeActionSetKey);
+  }
+
+  // ─── 窗口大小 ────────────────────────────────────────────────────────────────
+
+  /// 获取窗口宽度，默认 1200
+  int getWindowWidth() {
+    return prefs.getInt(_windowWidthKey) ?? 1200;
+  }
+
+  /// 保存窗口宽度
+  Future<void> saveWindowWidth(int width) async {
+    await prefs.setInt(_windowWidthKey, width);
+  }
+
+  /// 获取窗口高度，默认 800
+  int getWindowHeight() {
+    return prefs.getInt(_windowHeightKey) ?? 800;
+  }
+
+  /// 保存窗口高度
+  Future<void> saveWindowHeight(int height) async {
+    await prefs.setInt(_windowHeightKey, height);
   }
 
   // ─── 账户 ───────────────────────────────────────────────────────────────────

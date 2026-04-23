@@ -200,6 +200,8 @@ class _AppSettingsSectionState extends State<_AppSettingsSection> {
             const _LanguageSetting(),
             const Divider(height: 1, indent: 24, endIndent: 24),
             _CloseActionSetting(),
+            const Divider(height: 1, indent: 24, endIndent: 24),
+            const _WindowSizeSetting(),
             const SizedBox(height: 8),
           ],
         ],
@@ -710,6 +712,104 @@ class _InfoChip extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// 窗口大小设置项
+class _WindowSizeSetting extends StatefulWidget {
+  const _WindowSizeSetting();
+
+  @override
+  State<_WindowSizeSetting> createState() => _WindowSizeSettingState();
+}
+
+class _WindowSizeSettingState extends State<_WindowSizeSetting> {
+  late String _selectedSize;
+  final _presetSizes = [
+    {'label': '800 × 600', 'width': 800, 'height': 600},
+    {'label': '1024 × 768', 'width': 1024, 'height': 768},
+    {'label': '1280 × 720', 'width': 1280, 'height': 720},
+    {'label': '1280 × 800', 'width': 1280, 'height': 800},
+    {'label': '1366 × 768', 'width': 1366, 'height': 768},
+    {'label': '1440 × 900', 'width': 1440, 'height': 900},
+    {'label': '1920 × 1080', 'width': 1920, 'height': 1080},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  void _loadSettings() {
+    final storage = context.read<StorageService>();
+    final width = storage.getWindowWidth();
+    final height = storage.getWindowHeight();
+    _selectedSize = '$width × $height';
+    // 如果当前尺寸不在预设中，添加为自定义选项
+    if (!_presetSizes.any((s) => s['label'] == _selectedSize)) {
+      _selectedSize = '自定义';
+    }
+  }
+
+  Future<void> _onSizeChanged(String? label) async {
+    if (label == null) return;
+    final preset = _presetSizes.firstWhere((s) => s['label'] == label);
+    final storage = context.read<StorageService>();
+    await storage.saveWindowWidth(preset['width'] as int);
+    await storage.saveWindowHeight(preset['height'] as int);
+    setState(() => _selectedSize = label);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.read<LocaleProvider>().t(
+            '窗口大小已更改，重启应用后生效',
+            'Window size changed, will take effect after restart',
+          )),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final locale = context.watch<LocaleProvider>();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Row(
+        children: [
+          Icon(Icons.aspect_ratio, size: 18, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 12),
+          Text(locale.t('窗口大小', 'Window Size'), style: theme.textTheme.bodyMedium),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: DropdownButton<String>(
+              value: _selectedSize,
+              underline: const SizedBox(),
+              items: _presetSizes.map((size) {
+                return DropdownMenuItem(
+                  value: size['label'] as String,
+                  child: Text(size['label'] as String),
+                );
+              }).toList(),
+              onChanged: _onSizeChanged,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
