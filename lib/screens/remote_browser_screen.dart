@@ -72,6 +72,7 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
   Future<void> _loadObjects() async {
     if (_ossService == null || !_isInitialized) return;
 
+    // 合并状态更新到一个 setState
     setState(() {
       _isLoading = true;
       _error = null;
@@ -83,6 +84,8 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
       final prefix = _prefixStack.isEmpty ? '' : _prefixStack.last;
       _currentPrefix = prefix;
       final objects = await _ossService!.listObjects(prefix);
+      
+      // 使用单个 setState 更新所有状态
       setState(() {
         _allObjects = objects;
         _processDisplayObjects();
