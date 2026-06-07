@@ -25,6 +25,10 @@ static void my_application_activate(GApplication* application) {
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
 
+  // 设置窗口默认暗色主题
+  GtkSettings* settings = gtk_settings_get_default();
+  g_object_set(settings, "gtk-application-prefer-dark-theme", TRUE, nullptr);
+
   // Use a header bar when running in GNOME as this is the common style used
   // by applications and is the setup most users will be using (e.g. Ubuntu
   // desktop).
@@ -47,12 +51,53 @@ static void my_application_activate(GApplication* application) {
     gtk_widget_show(GTK_WIDGET(header_bar));
     gtk_header_bar_set_title(header_bar, "osssync");
     gtk_header_bar_set_show_close_button(header_bar, TRUE);
+
+    // 应用暗色主题 CSS，使标题栏与 Flutter 暗色主题一致
+    GtkCssProvider* css_provider = gtk_css_provider_new();
+    gtk_css_provider_load_from_data(
+        css_provider,
+        "headerbar {"
+        "  background-color: #1E1E1E;"
+        "  color: #FFFFFF;"
+        "  border-bottom: 1px solid #2D2D2D;"
+        "}"
+        "headerbar:backdrop {"
+        "  background-color: #1E1E1E;"
+        "  color: #FFFFFF;"
+        "}"
+        "headerbar title {"
+        "  color: #FFFFFF;"
+        "}"
+        "headerbar title:backdrop {"
+        "  color: #FFFFFF;"
+        "}"
+        "headerbar button {"
+        "  color: #FFFFFF;"
+        "}"
+        "headerbar button:hover {"
+        "  background-color: #3A3A3A;"
+        "}"
+        "headerbar button:backdrop {"
+        "  color: #FFFFFF;"
+        "}",
+        -1, nullptr);
+    GtkStyleContext* context = gtk_widget_get_style_context(
+        GTK_WIDGET(header_bar));
+    gtk_style_context_add_provider(
+        context,
+        GTK_STYLE_PROVIDER(css_provider),
+        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+    g_object_unref(css_provider);
+
     gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
   } else {
     gtk_window_set_title(window, "osssync");
   }
 
   gtk_window_set_default_size(window, 1280, 720);
+
+  // 设置窗口图标 - 使用应用程序图标名称
+  gtk_window_set_icon_name(window, "osssync");
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(
@@ -144,5 +189,5 @@ MyApplication* my_application_new() {
 
   return MY_APPLICATION(g_object_new(my_application_get_type(),
                                      "application-id", APPLICATION_ID, "flags",
-                                     G_APPLICATION_NON_UNIQUE, nullptr));
+                                     G_APPLICATION_DEFAULT_FLAGS, nullptr));
 }

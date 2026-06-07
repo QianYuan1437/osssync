@@ -615,7 +615,7 @@ class _RemoteBrowserScreenState extends State<RemoteBrowserScreen> {
                                 Icon(Icons.chevron_right, size: 18, color: theme.colorScheme.onSurfaceVariant),
                                 InkWell(
                                   onTap: isLast ? null : () {
-                                    final prefix = _pathSegments.sublist(0, idx + 1).join('/') + '/';
+                                    final prefix = '${_pathSegments.sublist(0, idx + 1).join('/')}/';
                                     _navigateToPrefix(prefix);
                                   },
                                   child: Padding(

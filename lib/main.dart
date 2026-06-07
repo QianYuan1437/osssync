@@ -13,23 +13,30 @@ import 'services/storage_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // 初始化本地存储
+  final storage = StorageService();
+  await storage.init();
+
   // 初始化窗口管理
   await windowManager.ensureInitialized();
-  const windowOptions = WindowOptions(
-    size: Size(1280, 720),
-    minimumSize: Size(900, 600),
+  final windowWidth = storage.getWindowWidth().toDouble();
+  final windowHeight = storage.getWindowHeight().toDouble();
+  final startMinimized = storage.getStartMinimized();
+  final windowOptions = WindowOptions(
+    size: Size(windowWidth, windowHeight),
+    minimumSize: const Size(900, 600),
     center: true,
     title: 'OSS Sync',
     titleBarStyle: TitleBarStyle.normal,
   );
   await windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
+    // 设置窗口图标
+    await windowManager.setIcon('assets/icons/cloud.png');
+    if (!startMinimized) {
+      await windowManager.show();
+      await windowManager.focus();
+    }
   });
-
-  // 初始化本地存储
-  final storage = StorageService();
-  await storage.init();
 
   // 初始化 Provider
   final localeProvider = LocaleProvider();
@@ -81,22 +88,26 @@ class _AppWithTrayState extends State<AppWithTray>
   }
 
   Future<void> _initTray() async {
-    // Windows 需要 .ico 格式，其他平台使用 .png
-    final iconPath = defaultTargetPlatform == TargetPlatform.windows
-        ? 'assets/icons/tray_icon.ico'
-        : 'assets/icons/cloud.png';
-    await trayManager.setIcon(iconPath);
-    if (!mounted) return;
-    final locale = context.read<LocaleProvider>();
-    final menu = Menu(items: [
-      MenuItem(key: 'show', label: locale.t('显示主窗口', 'Show Window')),
-      MenuItem.separator(),
-      MenuItem(key: 'sync_all', label: locale.t('立即同步全部', 'Sync All')),
-      MenuItem.separator(),
-      MenuItem(key: 'quit', label: locale.t('退出', 'Quit')),
-    ]);
-    await trayManager.setContextMenu(menu);
-    await trayManager.setToolTip(locale.t('OSS Sync - 阿里云 OSS 同步工具', 'OSS Sync - Aliyun OSS Sync Tool'));
+    try {
+      // Windows 需要 .ico 格式，其他平台使用 .png
+      final iconPath = defaultTargetPlatform == TargetPlatform.windows
+          ? 'assets/icons/tray_icon.ico'
+          : 'assets/icons/cloud.png';
+      await trayManager.setIcon(iconPath);
+      if (!mounted) return;
+      final locale = context.read<LocaleProvider>();
+      final menu = Menu(items: [
+        MenuItem(key: 'show', label: locale.t('显示主窗口', 'Show Window')),
+        MenuItem.separator(),
+        MenuItem(key: 'sync_all', label: locale.t('立即同步全部', 'Sync All')),
+        MenuItem.separator(),
+        MenuItem(key: 'quit', label: locale.t('退出', 'Quit')),
+      ]);
+      await trayManager.setContextMenu(menu);
+      await trayManager.setToolTip(locale.t('OSS Sync - 阿里云 OSS 同步工具', 'OSS Sync - Aliyun OSS Sync Tool'));
+    } catch (e) {
+      debugPrint('Failed to initialize tray: $e');
+    }
   }
 
   @override
@@ -139,29 +150,46 @@ class _AppWithTrayState extends State<AppWithTray>
   // ─── WindowListener ──────────────────────────────────────────────────────────
 
   @override
-  void onWindowClose() async {
-    final storage = context.read<StorageService>();
-    final isActionSet = storage.isCloseActionSet();
+  void onWindowMinimize() async {
+    try {
+      await windowManager.hide();
+    } catch (e) {
+      debugPrint('Failed to hide window on minimize: $e');
+    }
+  }
 
-    if (!isActionSet) {
-      // 首次关闭：弹出选择对话框
-      final result = await _showCloseActionDialog(storage);
-      if (result == null) {
-        // 用户取消，不做任何操作（窗口保持打开）
-        return;
-      }
-      if (result == 'exit') {
-        await windowManager.destroy();
+  @override
+  void onWindowClose() async {
+    try {
+      final storage = context.read<StorageService>();
+      final isActionSet = storage.isCloseActionSet();
+
+      if (!isActionSet) {
+        // 首次关闭：弹出选择对话框
+        final result = await _showCloseActionDialog(storage);
+        if (result == null) {
+          // 用户取消，不做任何操作（窗口保持打开）
+          return;
+        }
+        if (result == 'exit') {
+          await windowManager.destroy();
+        } else {
+          // 最小化到托盘
+          await windowManager.hide();
+        }
       } else {
-        await windowManager.hide();
+        final action = storage.getCloseAction();
+        if (action == 'exit') {
+          await windowManager.destroy();
+        } else {
+          // 最小化到托盘（默认行为）
+          await windowManager.hide();
+        }
       }
-    } else {
-      final action = storage.getCloseAction();
-      if (action == 'exit') {
-        await windowManager.destroy();
-      } else {
-        await windowManager.hide();
-      }
+    } catch (e) {
+      debugPrint('Failed to handle window close: $e');
+      // 如果出错，默认最小化到托盘而不是销毁窗口
+      await windowManager.hide();
     }
   }
 

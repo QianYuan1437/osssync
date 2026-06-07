@@ -14,6 +14,8 @@ class StorageService {
   static const _themeModeKey = 'theme_mode';
   static const _closeActionKey = 'close_action';
   static const _closeActionSetKey = 'close_action_set';
+  static const _startMinimizedKey = 'start_minimized';
+  static const _autoStartKey = 'auto_start';
   static const _windowWidthKey = 'window_width';
   static const _windowHeightKey = 'window_height';
   static const _maxLogs = 500;
@@ -65,6 +67,30 @@ class StorageService {
 
   Future<void> resetCloseActionSetting() async {
     await prefs.remove(_closeActionSetKey);
+  }
+
+  // ─── 启动时最小化 ─────────────────────────────────────────────────────────────
+
+  /// 获取是否启动时最小化到托盘，默认 false
+  bool getStartMinimized() {
+    return prefs.getBool(_startMinimizedKey) ?? false;
+  }
+
+  /// 保存是否启动时最小化到托盘
+  Future<void> saveStartMinimized(bool startMinimized) async {
+    await prefs.setBool(_startMinimizedKey, startMinimized);
+  }
+
+  // ─── 开机自启 ─────────────────────────────────────────────────────────────────
+
+  /// 获取是否开机自启，默认 false
+  bool getAutoStart() {
+    return prefs.getBool(_autoStartKey) ?? false;
+  }
+
+  /// 保存是否开机自启
+  Future<void> saveAutoStart(bool autoStart) async {
+    await prefs.setBool(_autoStartKey, autoStart);
   }
 
   // ─── 窗口大小 ────────────────────────────────────────────────────────────────

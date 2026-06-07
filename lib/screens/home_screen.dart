@@ -5,6 +5,7 @@ import '../models/sync_task.dart';
 import '../providers/account_provider.dart';
 import '../providers/locale_provider.dart';
 import '../providers/sync_provider.dart';
+import '../services/auto_start_service.dart';
 import '../services/storage_service.dart';
 import '../utils/app_navigator.dart';
 import '../widgets/common_widgets.dart';
@@ -26,118 +27,133 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 顶部标题栏
-          PageHeader(
-            title: context.watch<LocaleProvider>().t('控制台', 'Dashboard'),
-            actions: [
-              FilledButton.icon(
-                onPressed: syncProvider.hasAnySyncing
-                    ? null
-                    : () => syncProvider.runAllEnabledTasks(),
-                icon: syncProvider.hasAnySyncing
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.sync, size: 18),
-                label: Text(context.watch<LocaleProvider>().t(
-                  syncProvider.hasAnySyncing ? '同步中...' : '立即同步全部',
-                  syncProvider.hasAnySyncing ? 'Syncing...' : 'Sync All',
-                )),
-              ),
-            ],
-          ),
-          // 统计卡片
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-            child: Row(
-              children: [
-                _StatCard(
-                  icon: Icons.manage_accounts,
-                  label: context.watch<LocaleProvider>().t('账户数', 'Accounts'),
-                  value: '${accountProvider.accounts.length}',
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 12),
-                _StatCard(
-                  icon: Icons.sync,
-                  label: context.watch<LocaleProvider>().t('同步任务', 'Tasks'),
-                  value: '${tasks.length}',
-                  color: Colors.green,
-                ),
-                const SizedBox(width: 12),
-                _StatCard(
-                  icon: Icons.check_circle,
-                  label: context.watch<LocaleProvider>().t('已启用', 'Enabled'),
-                  value: '${tasks.where((t) => t.isEnabled).length}',
-                  color: Colors.teal,
-                ),
-                const SizedBox(width: 12),
-                _StatCard(
-                  icon: Icons.error_outline,
-                  label: context.watch<LocaleProvider>().t('错误任务', 'Errors'),
-                  value:
-                      '${tasks.where((t) => t.status == SyncStatus.error).length}',
-                  color: Colors.red,
-                ),
-              ],
-            ),
-          ),
-          // 任务列表
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-            child: Row(
-              children: [
-                Text(context.watch<LocaleProvider>().t('同步任务状态', 'Task Status'),
-                    style: theme.textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.bold)),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.arrow_forward, size: 14),
-                  label: Text(context.watch<LocaleProvider>().t('管理任务', 'Manage')),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: tasks.isEmpty
-                ? EmptyState(
-                    icon: Icons.sync_disabled,
-                    message: context.watch<LocaleProvider>().t('暂无同步任务', 'No sync tasks'),
-                    action: TextButton(
-                      onPressed: () => AppNavigator.toNewTask(context),
-                      child: Text(context.watch<LocaleProvider>().t('创建第一个同步任务', 'Create First Task')),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 顶部标题栏
+                    PageHeader(
+                      title: context.watch<LocaleProvider>().t('控制台', 'Dashboard'),
+                      actions: [
+                        FilledButton.icon(
+                          onPressed: syncProvider.hasAnySyncing
+                              ? null
+                              : () => syncProvider.runAllEnabledTasks(),
+                          icon: syncProvider.hasAnySyncing
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.sync, size: 18),
+                          label: Text(context.watch<LocaleProvider>().t(
+                            syncProvider.hasAnySyncing ? '同步中...' : '立即同步全部',
+                            syncProvider.hasAnySyncing ? 'Syncing...' : 'Sync All',
+                          )),
+                        ),
+                      ],
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                    itemCount: tasks.length,
-                    itemBuilder: (context, index) {
-                      final task = tasks[index];
-                      final account =
-                          accountProvider.getAccountById(task.accountId);
-                      final bucket = accountProvider
-                          .getBucketConfigById(task.bucketConfigId);
-                      return _TaskStatusCard(
-                        task: task,
-                        accountName: account?.name ?? context.watch<LocaleProvider>().t('未知账户', 'Unknown Account'),
-                        bucketName: bucket?.bucketName ?? context.watch<LocaleProvider>().t('未知存储桶', 'Unknown Bucket'),
-                        progress: syncProvider.getProgress(task.id),
-                        onSync: () => syncProvider.runSync(task.id),
-                        onEdit: () => AppNavigator.toEditTask(context, task.id),
-                      );
-                    },
-                  ),
-          ),
-          // 应用设置区域
-          const Divider(height: 1),
-          _AppSettingsSection(),
-        ],
+                    // 统计卡片
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                      child: Row(
+                        children: [
+                          _StatCard(
+                            icon: Icons.manage_accounts,
+                            label: context.watch<LocaleProvider>().t('账户数', 'Accounts'),
+                            value: '${accountProvider.accounts.length}',
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 12),
+                          _StatCard(
+                            icon: Icons.sync,
+                            label: context.watch<LocaleProvider>().t('同步任务', 'Tasks'),
+                            value: '${tasks.length}',
+                            color: Colors.green,
+                          ),
+                          const SizedBox(width: 12),
+                          _StatCard(
+                            icon: Icons.check_circle,
+                            label: context.watch<LocaleProvider>().t('已启用', 'Enabled'),
+                            value: '${tasks.where((t) => t.isEnabled).length}',
+                            color: Colors.teal,
+                          ),
+                          const SizedBox(width: 12),
+                          _StatCard(
+                            icon: Icons.error_outline,
+                            label: context.watch<LocaleProvider>().t('错误任务', 'Errors'),
+                            value:
+                                '${tasks.where((t) => t.status == SyncStatus.error).length}',
+                            color: Colors.red,
+                          ),
+                        ],
+                      ),
+                    ),
+                    // 任务列表
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                      child: Row(
+                        children: [
+                          Text(context.watch<LocaleProvider>().t('同步任务状态', 'Task Status'),
+                              style: theme.textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold)),
+                          const Spacer(),
+                          TextButton.icon(
+                            onPressed: () {},
+                            icon: const Icon(Icons.arrow_forward, size: 14),
+                            label: Text(context.watch<LocaleProvider>().t('管理任务', 'Manage')),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // 任务列表内容
+                    if (tasks.isEmpty)
+                      Expanded(
+                        child: EmptyState(
+                          icon: Icons.sync_disabled,
+                          message: context.watch<LocaleProvider>().t('暂无同步任务', 'No sync tasks'),
+                          action: TextButton(
+                            onPressed: () => AppNavigator.toNewTask(context),
+                            child: Text(context.watch<LocaleProvider>().t('创建第一个同步任务', 'Create First Task')),
+                          ),
+                        ),
+                      )
+                    else
+                      Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                          itemCount: tasks.length,
+                          itemBuilder: (context, index) {
+                            final task = tasks[index];
+                            final account =
+                                accountProvider.getAccountById(task.accountId);
+                            final bucket = accountProvider
+                                .getBucketConfigById(task.bucketConfigId);
+                            return _TaskStatusCard(
+                              task: task,
+                              accountName: account?.name ?? context.watch<LocaleProvider>().t('未知账户', 'Unknown Account'),
+                              bucketName: bucket?.bucketName ?? context.watch<LocaleProvider>().t('未知存储桶', 'Unknown Bucket'),
+                              progress: syncProvider.getProgress(task.id),
+                              onSync: () => syncProvider.runSync(task.id),
+                              onEdit: () => AppNavigator.toEditTask(context, task.id),
+                            );
+                          },
+                        ),
+                      ),
+                    // 应用设置区域
+                    const Divider(height: 1),
+                    _AppSettingsSection(),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -201,6 +217,10 @@ class _AppSettingsSectionState extends State<_AppSettingsSection> {
             const Divider(height: 1, indent: 24, endIndent: 24),
             _CloseActionSetting(),
             const Divider(height: 1, indent: 24, endIndent: 24),
+            const _StartMinimizedSetting(),
+            const Divider(height: 1, indent: 24, endIndent: 24),
+            const _AutoStartSetting(),
+            const Divider(height: 1, indent: 24, endIndent: 24),
             const _WindowSizeSetting(),
             const SizedBox(height: 8),
           ],
@@ -225,31 +245,99 @@ class _LanguageSetting extends StatelessWidget {
         children: [
           Icon(Icons.language, size: 18, color: theme.colorScheme.onSurfaceVariant),
           const SizedBox(width: 12),
-          Text('语言', style: theme.textTheme.bodyMedium),
-          const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                width: 1,
-              ),
-            ),
-            child: DropdownButton<String>(
-              value: localeProvider.locale,
-              underline: const SizedBox(),
-              items: const [
-                DropdownMenuItem(value: 'zh', child: Text('简体中文')),
-                DropdownMenuItem(value: 'en', child: Text('English')),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      context.watch<LocaleProvider>().t('语言', 'Language'),
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                    const Spacer(),
+                    _LanguageChip(
+                      label: '简体中文',
+                      value: 'zh',
+                      groupValue: localeProvider.locale,
+                      onChanged: (value) {
+                        if (value != null) localeProvider.setLocale(value);
+                      },
+                    ),
+                    const SizedBox(width: 10),
+                    _LanguageChip(
+                      label: 'English',
+                      value: 'en',
+                      groupValue: localeProvider.locale,
+                      onChanged: (value) {
+                        if (value != null) localeProvider.setLocale(value);
+                      },
+                    ),
+                  ],
+                ),
+                Text(
+                  context.watch<LocaleProvider>().t(
+                    '当前：${localeProvider.locale == 'zh' ? '简体中文' : 'English'}',
+                    'Current: ${localeProvider.locale == 'zh' ? '简体中文' : 'English'}',
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
-              onChanged: (value) {
-                if (value != null) localeProvider.setLocale(value);
-              },
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 语言选择芯片
+class _LanguageChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final String groupValue;
+  final ValueChanged<String?> onChanged;
+
+  const _LanguageChip({
+    required this.label,
+    required this.value,
+    required this.groupValue,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isSelected = value == groupValue;
+    return InkWell(
+      onTap: () => onChanged(value),
+      borderRadius: BorderRadius.circular(20),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.colorScheme.primary.withValues(alpha: 0.12)
+              : theme.colorScheme.surfaceContainerHighest,
+          border: Border.all(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outlineVariant,
+            width: isSelected ? 1.5 : 1,
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
       ),
     );
   }
@@ -308,85 +396,284 @@ class _CloseActionSettingState extends State<_CloseActionSetting> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Icon(Icons.close,
-                  size: 16, color: theme.colorScheme.onSurfaceVariant),
-              const SizedBox(width: 8),
-              Text(
-                context.watch<LocaleProvider>().t('关闭窗口行为', 'Close Window Behavior'),
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(width: 8),
-              if (!_isSet)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.tertiaryContainer,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    context.watch<LocaleProvider>().t('未设置', 'Not Set'),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onTertiaryContainer,
+          Icon(Icons.close,
+              size: 18, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      context.watch<LocaleProvider>().t('关闭窗口行为', 'Close Window Behavior'),
+                      style: theme.textTheme.bodyMedium,
                     ),
+                    const SizedBox(width: 8),
+                    if (!_isSet)
+                      Container(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.tertiaryContainer,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          context.watch<LocaleProvider>().t('未设置', 'Not Set'),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onTertiaryContainer,
+                          ),
+                        ),
+                      ),
+                    const Spacer(),
+                    _SettingRadioChip(
+                      label: context.watch<LocaleProvider>().t('最小化到系统托盘', 'Minimize to Tray'),
+                      icon: Icons.minimize,
+                      value: 'minimize',
+                      groupValue: _closeAction,
+                      onChanged: _onActionChanged,
+                    ),
+                    const SizedBox(width: 10),
+                    _SettingRadioChip(
+                      label: context.watch<LocaleProvider>().t('退出程序', 'Exit App'),
+                      icon: Icons.exit_to_app,
+                      value: 'exit',
+                      groupValue: _closeAction,
+                      onChanged: _onActionChanged,
+                    ),
+                    if (_isSet) ...[
+                      const SizedBox(width: 10),
+                      TextButton.icon(
+                        onPressed: _onResetSetting,
+                        icon: const Icon(Icons.refresh, size: 14),
+                        label: Text(context.watch<LocaleProvider>().t('重置', 'Reset')),
+                        style: TextButton.styleFrom(
+                          foregroundColor: theme.colorScheme.onSurfaceVariant,
+                          textStyle: theme.textTheme.bodySmall,
+                          visualDensity: VisualDensity.compact,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                Text(
+                  context.watch<LocaleProvider>().t(
+                    _isSet
+                        ? '当前：${_closeAction == 'minimize' ? '最小化到系统托盘' : '退出程序'}'
+                        : '尚未设置，下次关闭时将询问',
+                    _isSet
+                        ? 'Current: ${_closeAction == 'minimize' ? 'Minimize to tray' : 'Exit app'}'
+                        : 'Not set, will ask next time',
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              _SettingRadioChip(
-                label: context.watch<LocaleProvider>().t('最小化到系统托盘', 'Minimize to Tray'),
-                icon: Icons.minimize,
-                value: 'minimize',
-                groupValue: _closeAction,
-                onChanged: _onActionChanged,
-              ),
-              const SizedBox(width: 10),
-              _SettingRadioChip(
-                label: context.watch<LocaleProvider>().t('退出程序', 'Exit App'),
-                icon: Icons.exit_to_app,
-                value: 'exit',
-                groupValue: _closeAction,
-                onChanged: _onActionChanged,
-              ),
-              const Spacer(),
-              if (_isSet)
-                TextButton.icon(
-                  onPressed: _onResetSetting,
-                  icon: const Icon(Icons.refresh, size: 14),
-                  label: Text(context.watch<LocaleProvider>().t('重置（下次询问）', 'Reset')),
-                  style: TextButton.styleFrom(
-                    foregroundColor: theme.colorScheme.onSurfaceVariant,
-                    textStyle: theme.textTheme.bodySmall,
-                    visualDensity: VisualDensity.compact,
+        ],
+      ),
+    );
+  }
+}
+
+/// 启动时最小化设置项
+class _StartMinimizedSetting extends StatefulWidget {
+  const _StartMinimizedSetting();
+
+  @override
+  State<_StartMinimizedSetting> createState() => _StartMinimizedSettingState();
+}
+
+class _StartMinimizedSettingState extends State<_StartMinimizedSetting> {
+  late bool _startMinimized;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  void _loadSettings() {
+    final storage = context.read<StorageService>();
+    _startMinimized = storage.getStartMinimized();
+  }
+
+  Future<void> _onChanged(bool value) async {
+    final storage = context.read<StorageService>();
+    await storage.saveStartMinimized(value);
+    setState(() => _startMinimized = value);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.read<LocaleProvider>().t(
+            value ? '已启用启动时最小化' : '已禁用启动时最小化',
+            value ? 'Start minimized enabled' : 'Start minimized disabled',
+          )),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Row(
+        children: [
+          Icon(Icons.minimize, size: 18, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.watch<LocaleProvider>().t('启动时最小化到托盘', 'Start Minimized to Tray'),
+                  style: theme.textTheme.bodyMedium,
+                ),
+                Text(
+                  context.watch<LocaleProvider>().t(
+                    '应用启动时自动最小化到系统托盘',
+                    'Automatically minimize to system tray on startup',
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            context.watch<LocaleProvider>().t(
-              _isSet
-                  ? '当前设置：点击关闭按钮将${_closeAction == 'minimize' ? '最小化到系统托盘' : '退出程序'}'
-                  : '尚未设置，下次点击关闭按钮时将弹出选择对话框',
-              _isSet
-                  ? 'Current: ${_closeAction == 'minimize' ? 'Minimize to tray' : 'Exit app'}'
-                  : 'Not set, will ask next time',
-            ),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontStyle: FontStyle.italic,
+              ],
             ),
           ),
+          Switch(
+            value: _startMinimized,
+            onChanged: _onChanged,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 开机自启设置项
+class _AutoStartSetting extends StatefulWidget {
+  const _AutoStartSetting();
+
+  @override
+  State<_AutoStartSetting> createState() => _AutoStartSettingState();
+}
+
+class _AutoStartSettingState extends State<_AutoStartSetting> {
+  bool _autoStart = false;
+  bool _loading = true;
+  final _autoStartService = AutoStartService();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSettings();
+    });
+  }
+
+  Future<void> _loadSettings() async {
+    if (!mounted) return;
+    final storage = context.read<StorageService>();
+    final autoStart = storage.getAutoStart();
+    // 验证实际的自启动文件状态
+    final isEnabled = await _autoStartService.isAutoStartEnabled();
+    // 如果存储的值与实际状态不一致，以实际状态为准
+    if (autoStart != isEnabled) {
+      await storage.saveAutoStart(isEnabled);
+    }
+    if (mounted) {
+      setState(() {
+        _autoStart = isEnabled;
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _onChanged(bool value) async {
+    setState(() => _loading = true);
+    try {
+      await _autoStartService.setAutoStart(value);
+      final storage = context.read<StorageService>();
+      await storage.saveAutoStart(value);
+      if (mounted) {
+        setState(() {
+          _autoStart = value;
+          _loading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.read<LocaleProvider>().t(
+              value ? '已启用开机自启' : '已禁用开机自启',
+              value ? 'Auto-start enabled' : 'Auto-start disabled',
+            )),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.read<LocaleProvider>().t(
+              '设置开机自启失败: $e',
+              'Failed to set auto-start: $e',
+            )),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Row(
+        children: [
+          Icon(Icons.power_settings_new, size: 18, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.watch<LocaleProvider>().t('开机自启', 'Auto Start'),
+                  style: theme.textTheme.bodyMedium,
+                ),
+                Text(
+                  context.watch<LocaleProvider>().t(
+                    '系统启动时自动运行应用',
+                    'Automatically run app on system startup',
+                  ),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _loading
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Switch(
+                  value: _autoStart,
+                  onChanged: _onChanged,
+                ),
         ],
       ),
     );
